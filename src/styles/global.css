@@ -29,3 +29,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .js [data-after-title] { transform: none; filter: none; }
   .landed [data-after-title] { animation-duration: .01s; }
 }
+
+/* Sections */
+.sec { position: relative; padding: clamp(96px, 14vh, 160px) 0; background: var(--bg); transition: background-color .5s ease; }
+.sec.alt { background: var(--bg-2); }
+.sec:last-of-type { min-height: 80vh; padding-bottom: 180px; }
+.sec-title { font-size: clamp(44px, 6.4vw, 88px); font-weight: 700; letter-spacing: -.045em; line-height: 1; margin-bottom: clamp(36px, 6vh, 64px); }
+.sec-title.big { font-size: clamp(56px, 11vw, 168px); }
+.sec-sub { margin: -24px 0 48px; max-width: 40em; font-size: clamp(19px, 1.7vw, 24px); font-weight: 500; letter-spacing: -.015em; color: var(--text-2); }
+.now { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--now-fg); background: var(--now-bg); }
+.now i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

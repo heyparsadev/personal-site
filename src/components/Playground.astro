@@ -1,0 +1,39 @@
+---
+import { getCollection, render } from 'astro:content';
+
+interface Props {
+  intro: string;
+}
+const { intro } = Astro.props;
+const items = (await getCollection('playground')).sort((a, b) => a.data.order - b.data.order);
+const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (await render(it)).Content })));
+---
+<section class="sec" id="playground" aria-labelledby="playground-title">
+  <div class="wrap">
+    <h2 class="sec-title" id="playground-title">Playground</h2>
+    <p class="sec-sub">{intro}</p>
+    <ul class="plist">
+      {rendered.map(({ it, Content }) => (
+        <li class="pitem">
+          <div class="pitem-head">
+            <h3 class="pitem-title">
+              {it.data.url ? <a href={it.data.url} target="_blank" rel="noopener">{it.data.title}<span aria-hidden="true"> ↗</span></a> : it.data.title}
+            </h3>
+            <span class="pitem-meta">{[it.data.year, it.data.kind].filter(Boolean).join(' · ')}</span>
+          </div>
+          <div class="pitem-body"><Content /></div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .plist { list-style: none; border-top: 1px solid var(--line); }
+  .pitem { display: grid; grid-template-columns: minmax(180px, 280px) 1fr; gap: 12px 40px; padding: 28px 0; border-bottom: 1px solid var(--line); }
+  .pitem-title { font-size: 21px; font-weight: 600; letter-spacing: -.018em; }
+  .pitem-title a:hover { color: var(--accent); }
+  .pitem-meta { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .pitem-body { max-width: 62ch; font-size: 17px; line-height: 1.55; color: var(--text-2); }
+  @media (max-width: 720px) { .pitem { grid-template-columns: 1fr; } }
+</style>

@@ -1,0 +1,43 @@
+---
+import { parseLiveLine } from '../lib/live-line';
+
+interface Props {
+  name: readonly [string, string];
+  lines: readonly [string, string];
+  /** live-word key → href, for words that have their own page */
+  links: Record<string, string>;
+}
+const { name, lines, links } = Astro.props;
+const parsed = lines.map((l) => parseLiveLine(l));
+---
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-glow" data-hero-glow aria-hidden="true"></div>
+  <div class="hero-copy">
+    <h1 class="hero-name" id="hero-title" data-island-title><span>{name[0]}</span> <span>{name[1]}</span></h1>
+    <div class="hero-lines" data-scroll-fade>
+      {parsed.map((segs, i) => (
+        <p class:list={['hero-line', { dim: i === 1 }]} data-after-title style={`--i:${i}`}>
+          {segs.map((s) =>
+            s.kind === 'text' ? s.text
+            : links[s.key] ? <a class="lw" href={links[s.key]} data-word={s.key}>{s.text}</a>
+            : <button class="lw" type="button" data-word={s.key}>{s.text}</button>,
+          )}
+        </p>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  @property --glow { syntax: '<color>'; inherits: false; initial-value: rgba(0, 0, 0, 0); }
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; overflow: hidden; }
+  .hero-glow { position: absolute; left: 50%; top: 46%; width: min(1100px, 120vw); height: 72vh; transform: translate(-50%, -50%); background: radial-gradient(closest-side, var(--glow), rgba(0, 0, 0, 0)); transition: --glow .7s ease; pointer-events: none; }
+  .hero-copy { position: relative; text-align: center; padding: 0 5vw 6vh; }
+  .hero-name { font-size: clamp(56px, 10.2vw, 172px); font-weight: 700; letter-spacing: -.052em; line-height: .9; will-change: transform, opacity; }
+  .hero-name span { display: block; }
+  .hero-line { font-size: clamp(17px, 1.75vw, 26px); font-weight: 500; letter-spacing: -.016em; line-height: 1.4; }
+  .hero-line:first-child { margin-top: clamp(22px, 3.6vh, 40px); }
+  .hero-line.dim { margin-top: 4px; color: var(--text-3); }
+  .lw { font: inherit; color: inherit; letter-spacing: inherit; padding: 0 .1em; margin: 0 -.1em; border-radius: .3em; text-decoration: underline dotted var(--lw-line); text-decoration-thickness: 1.5px; text-underline-offset: .24em; transition: color .2s ease, background-color .2s ease, text-decoration-color .2s ease; }
+  .lw:hover, .lw.is-lit, .lw:focus-visible { color: var(--accent); background: var(--lw-bg); text-decoration-style: solid; text-decoration-color: currentColor; outline: none; }
+</style>

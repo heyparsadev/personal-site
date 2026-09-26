@@ -1,0 +1,54 @@
+---
+import { getEntry, render } from 'astro:content';
+
+const about = await getEntry('about', 'about');
+if (!about) throw new Error('content/site/about.md is missing');
+const { Content } = await render(about);
+const d = about.data;
+---
+<section class="sec alt" id="about" aria-labelledby="about-title">
+  <div class="wrap">
+    <h2 class="sec-title" id="about-title">About</h2>
+    <div class="lede"><Content /></div>
+    <div class="beliefs">
+      {d.beliefs.map((b) => (
+        <div class="belief">
+          <h3>{b.title}</h3>
+          <p>{b.text}</p>
+        </div>
+      ))}
+    </div>
+    <p class="timeline">
+      {d.timeline.map((t, i) => (
+        <>
+          <strong>{t.year}</strong> {t.name}{i < d.timeline.length - 1 ? ' · ' : ', '}
+        </>
+      ))}{d.timelineTail}
+    </p>
+    <div class="stack">
+      <h3 class="stack-title">What I ship with</h3>
+      <dl>
+        {d.stack.map((s) => (
+          <div class="stack-row"><dt>{s.label}</dt><dd>{s.text}</dd></div>
+        ))}
+      </dl>
+    </div>
+    <p class="personality">{d.personality}</p>
+  </div>
+</section>
+
+<style>
+  .lede :global(p) { max-width: 24em; font-size: clamp(26px, 3.2vw, 44px); font-weight: 600; letter-spacing: -.03em; line-height: 1.16; }
+  .beliefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 32px; margin-top: 72px; }
+  .belief h3 { font-size: 21px; font-weight: 600; letter-spacing: -.018em; line-height: 1.25; }
+  .belief p { margin-top: 10px; font-size: 17px; line-height: 1.5; color: var(--text-2); }
+  .timeline { margin-top: 72px; font-size: 19px; color: var(--text-2); }
+  .timeline strong { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stack { margin-top: 56px; }
+  .stack-title { font-size: 21px; font-weight: 600; letter-spacing: -.018em; margin-bottom: 16px; }
+  .stack-row { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .stack-row dt { font-weight: 600; }
+  .stack-row dd { color: var(--text-2); line-height: 1.5; }
+  .personality { margin-top: 56px; font-size: 19px; font-weight: 500; color: var(--text-3); }
+  @media (max-width: 560px) { .stack-row { grid-template-columns: 1fr; gap: 4px; } }
+</style>

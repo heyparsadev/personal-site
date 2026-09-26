@@ -1,0 +1,29 @@
+---
+import { getEntry } from 'astro:content';
+
+const about = await getEntry('about', 'about');
+if (!about) throw new Error('content/site/about.md is missing');
+---
+<section class="sec" id="contact" aria-labelledby="contact-title">
+  <div class="wrap">
+    <h2 class="sec-title big" id="contact-title">Say hello.</h2>
+    <ul class="links">
+      {about.data.links.map((l) => (
+        <li>
+          <a href={l.href} {...(l.href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}>
+            <span class="l-label">{l.label}</span><span class="l-handle">{l.handle}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .links { list-style: none; display: flex; flex-wrap: wrap; gap: 12px; }
+  .links a { display: inline-flex; align-items: baseline; gap: 10px; padding: 14px 22px; border-radius: 999px; background: var(--card); font-size: 17px; font-weight: 500; transition: background-color .2s ease, color .2s ease, transform .12s ease; }
+  .links a:hover { background: var(--accent); color: #fff; }
+  .links a:hover .l-handle { color: rgba(255, 255, 255, .8); }
+  .links a:active { transform: scale(.97); }
+  .l-handle { color: var(--text-3); }
+</style>

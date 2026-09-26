@@ -1,0 +1,42 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  id: string;
+  data: CollectionEntry<'projects'>['data'];
+}
+const { id, data } = Astro.props;
+const text = data.summary ?? data.tagline;
+---
+<article class="card" data-card={id}>
+  <header class="card-head">
+    <h3 class="card-title">{data.page ? <a class="card-link" href={`/${id}`}>{data.title}</a> : data.title}</h3>
+    {data.status === 'now' && <span class="now"><i aria-hidden="true"></i>Now</span>}
+  </header>
+  <p class="card-meta">{data.role} · {data.years}</p>
+  <p class="card-text">{text}</p>
+  {data.page ? (
+    <span class="card-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+  ) : (
+    <button class="card-btn" type="button" data-sheet-open={id} aria-haspopup="dialog" aria-controls={`sheet-${id}`} aria-label={`More about ${data.title}`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+    </button>
+  )}
+</article>
+
+<style>
+  .card { position: relative; display: flex; flex-direction: column; min-height: 260px; padding: 32px; border-radius: 28px; background: var(--card); transition: background-color .5s ease, transform .45s var(--ease-out); }
+  .card:hover { transform: translateY(-4px); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-title { font-size: 28px; font-weight: 700; letter-spacing: -.025em; }
+  .card-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .card-link:focus-visible { outline: none; }
+  .card:has(.card-link:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .card-meta { margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--text-3); }
+  .card-text { margin-top: auto; padding: 36px 52px 0 0; font-size: 19px; line-height: 1.4; letter-spacing: -.01em; color: var(--text-2); }
+  .card-btn { position: absolute; right: 24px; bottom: 24px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--bg-2); transition: transform .35s var(--ease-out), background-color .2s ease; }
+  .card-btn svg { width: 16px; height: 16px; }
+  .card:hover .card-btn { transform: scale(1.08); }
+  button.card-btn { z-index: 1; }
+  button.card-btn:active { transform: scale(.94); }
+</style>

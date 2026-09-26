@@ -1,0 +1,18 @@
+---
+import { getCollection } from 'astro:content';
+import WorkCard from './WorkCard.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+---
+<section class="sec alt" id="work" aria-labelledby="work-title">
+  <div class="wrap">
+    <h2 class="sec-title" id="work-title">Work</h2>
+    <div class="cards">
+      {projects.map((p) => <WorkCard id={p.id} data={p.data} />)}
+    </div>
+  </div>
+</section>
+
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+</style>

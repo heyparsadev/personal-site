@@ -1,6 +1,21 @@
 ---
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import WorkSection from '../components/WorkSection.astro';
+import Playground from '../components/Playground.astro';
+import About from '../components/About.astro';
+import Contact from '../components/Contact.astro';
+
+const home = await getEntry('home', 'home');
+if (!home) throw new Error('content/site/home.md is missing');
+const projects = await getCollection('projects');
+const links = Object.fromEntries(projects.filter((p) => p.data.page).map((p) => [p.id, `/${p.id}`]));
 ---
-<Base title="Parsa Kharazmian" description="Founder & CEO of Sibkade. Now building Barayand.">
-  <h1>Parsa Kharazmian.</h1>
+<Base title="Parsa Kharazmian" description="Founder & CEO of Sibkade. Now building Barayand. Startup × Tech × Psychology.">
+  <Hero name={home.data.name} lines={home.data.lines} links={links} />
+  <WorkSection />
+  <Playground intro={home.data.playgroundIntro} />
+  <About />
+  <Contact />
 </Base>
