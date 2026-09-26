@@ -1,0 +1,65 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/tokens.css';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ease = 'cubic-bezier(.22, 1, .36, 1)';
+const out = { name: 'hp-page-out', duration: '180ms', easing: 'ease-in', fillMode: 'both' };
+const pageAnim = {
+  forwards: { old: out, new: { name: 'hp-page-rise', duration: '460ms', easing: ease, delay: '80ms', fillMode: 'both' } },
+  backwards: { old: out, new: { name: 'hp-page-fall', duration: '460ms', easing: ease, delay: '80ms', fillMode: 'both' } },
+};
+---
+<!doctype html>
+<html lang="en" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        let t = null;
+        try { t = localStorage.getItem('heyparsa-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        root.dataset.theme = t;
+        root.style.colorScheme = t;
+        root.classList.add('js');
+        if (window.__hpBoot) return;
+        window.__hpBoot = true;
+        setTimeout(() => {
+          const r = document.documentElement;
+          if (!r.classList.contains('island-ready')) r.classList.add('island-failed');
+        }, 4000);
+        document.addEventListener('astro:before-swap', (e) => {
+          const from = document.documentElement, to = e.newDocument.documentElement;
+          to.dataset.theme = from.dataset.theme;
+          to.style.colorScheme = from.style.colorScheme;
+          for (const c of ['js', 'island-ready', 'island-failed']) if (from.classList.contains(c)) to.classList.add(c);
+        });
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <main id="content" transition:animate={pageAnim}>
+      <slot />
+    </main>
+    <slot name="overlay" />
+  </body>
+</html>
