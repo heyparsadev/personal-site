@@ -6,6 +6,8 @@ import WorkSection from '../components/WorkSection.astro';
 import Playground from '../components/Playground.astro';
 import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
+import PageCtx from '../components/PageCtx.astro';
+import { homeCtx } from '../lib/page-ctx';
 
 const home = await getEntry('home', 'home');
 if (!home) throw new Error('content/site/home.md is missing');
@@ -18,4 +20,5 @@ const links = Object.fromEntries(projects.filter((p) => p.data.page).map((p) => 
   <Playground intro={home.data.playgroundIntro} />
   <About />
   <Contact />
+  <PageCtx ctx={homeCtx()} />
 </Base>

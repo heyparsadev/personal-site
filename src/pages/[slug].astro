@@ -2,6 +2,8 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import NextProject from '../components/NextProject.astro';
+import PageCtx from '../components/PageCtx.astro';
+import { projectCtx } from '../lib/page-ctx';
 import '../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -19,9 +21,12 @@ interface Props {
   next: CollectionEntry<'projects'>;
 }
 const { entry, next } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const d = entry.data;
 const host = d.url ? new URL(d.url).hostname : null;
+const chapters = headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, label: h.text }));
+const info = (e: CollectionEntry<'projects'>) => ({ id: e.id, ...e.data });
+const ctx = projectCtx(info(entry), chapters, info(next));
 ---
 <Base title={`${d.title} · Parsa Kharazmian`} description={d.tagline}>
   <article class="project">
@@ -43,6 +48,7 @@ const host = d.url ? new URL(d.url).hostname : null;
     <div class="prose"><Content /></div>
   </article>
   <NextProject entry={next} />
+  <PageCtx ctx={ctx} />
 </Base>
 
 <style>

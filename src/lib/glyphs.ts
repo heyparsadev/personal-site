@@ -20,3 +20,11 @@ export function glyphSvg(name: GlyphName): string {
 export function tintBackground(tint: Tint): string {
   return `linear-gradient(140deg, ${tint[0]}, ${tint[1]})`;
 }
+
+/** "#0a84ff" → "10, 132, 255", for rgba() glows. */
+export function hexToRgb(hex: string): string {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  const n = parseInt(h, 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}

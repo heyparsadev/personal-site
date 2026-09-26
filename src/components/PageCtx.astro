@@ -1,0 +1,9 @@
+---
+import type { PageCtx } from '../lib/page-ctx';
+
+interface Props {
+  ctx: PageCtx;
+}
+const json = JSON.stringify(Astro.props.ctx).replace(/</g, '\\u003c');
+---
+<script type="application/json" id="page-ctx" set:html={json}></script>
