@@ -14,6 +14,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 180_000,
+    env: { ASTRO_PREVIEW_BACKGROUND: '1' },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
