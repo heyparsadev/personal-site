@@ -33,7 +33,7 @@ export class IslandCore {
     this.ctx = ctx;
     this.reduced = reduced;
     this.state = initialState(ctx.kind);
-    if (reduced) for (const s of [this.w, this.h, this.r, this.lean, this.split, this.gulp]) s.tune(0.3, 1);
+    if (reduced) for (const s of [this.w, this.h, this.r, this.lean, this.split, this.gulp, this.press]) s.tune(0.3, 1);
   }
 
   onFrame(fn: FrameHook): void { this.frames.push(fn); }

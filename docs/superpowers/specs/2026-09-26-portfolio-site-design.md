@@ -102,7 +102,7 @@ A pure function picks exactly one view. Priority, highest first:
 
 ### 5.4 Motion rules
 
-- Size and radius springs: response 0.5 s, damping 0.72.
+- Size springs: response 0.5 s, damping 0.72; radius spring: response 0.5 s, damping 0.85 (as in the approved prototype).
 - Press scale: 0.96.
 - Gulp: a scale impulse when a title is absorbed or released.
 - Split-dot spring: 0.55 s / 0.66. The dot sits about 10 px from the pill so the goo neck breaks at rest.
