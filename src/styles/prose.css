@@ -1,0 +1,10 @@
+.prose { width: min(680px, 88vw); margin: 0 auto; font-size: 21px; line-height: 1.6; letter-spacing: -.01em; color: var(--text-2); }
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { margin-top: 2.6em; color: var(--text); font-size: clamp(32px, 4.2vw, 52px); font-weight: 700; letter-spacing: -.035em; line-height: 1.08; scroll-margin-top: 96px; }
+.prose > h2:first-child { margin-top: 0; }
+.prose h2 + p { margin-top: .8em; }
+.prose strong { color: var(--text); font-weight: 600; }
+.prose a { color: var(--accent); }
+.prose blockquote { margin: 1.6em 0; }
+.prose blockquote p { color: var(--text); font-size: clamp(30px, 3.6vw, 46px); font-weight: 600; letter-spacing: -.03em; line-height: 1.15; }
+@media (max-width: 560px) { .prose { font-size: 19px; } }

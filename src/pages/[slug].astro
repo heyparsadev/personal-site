@@ -1,0 +1,56 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import NextProject from '../components/NextProject.astro';
+import '../styles/prose.css';
+
+export async function getStaticPaths() {
+  const pages = (await getCollection('projects'))
+    .filter((p) => p.data.page)
+    .sort((a, b) => a.data.order - b.data.order);
+  return pages.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: pages[(i + 1) % pages.length] },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  next: CollectionEntry<'projects'>;
+}
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const host = d.url ? new URL(d.url).hostname : null;
+---
+<Base title={`${d.title} · Parsa Kharazmian`} description={d.tagline}>
+  <article class="project">
+    <header class="p-head">
+      <h1 class="p-title" data-island-title>{d.title}</h1>
+      <div data-scroll-fade>
+        <p class="p-tagline" data-after-title style="--i:0">{d.tagline}</p>
+        <p class="p-meta" data-after-title style="--i:1">
+          <span>{d.role}</span><span aria-hidden="true">&nbsp;·&nbsp;</span><span>{d.years}</span>
+          {d.url && host && (
+            <>
+              <span aria-hidden="true">&nbsp;·&nbsp;</span><a href={d.url} target="_blank" rel="noopener">{host} ↗</a>
+            </>
+          )}
+          {d.status === 'now' && <span class="now"><i aria-hidden="true"></i>Now</span>}
+        </p>
+      </div>
+    </header>
+    <div class="prose"><Content /></div>
+  </article>
+  <NextProject entry={next} />
+</Base>
+
+<style>
+  .project { padding: clamp(140px, 22vh, 220px) 0 clamp(96px, 14vh, 160px); }
+  .p-head { width: var(--wrap); margin: 0 auto clamp(72px, 12vh, 140px); text-align: center; }
+  .p-title { font-size: clamp(64px, 13vw, 208px); font-weight: 700; letter-spacing: -.055em; line-height: .9; will-change: transform, opacity; }
+  .p-tagline { max-width: 22em; margin: clamp(22px, 3.6vh, 40px) auto 0; font-size: clamp(22px, 2.6vw, 36px); font-weight: 600; letter-spacing: -.025em; line-height: 1.2; }
+  .p-meta { margin-top: 20px; font-size: 15px; font-weight: 500; color: var(--text-3); }
+  .p-meta a:hover { color: var(--accent); }
+  .p-meta .now { margin-left: 12px; vertical-align: 1px; }
+</style>

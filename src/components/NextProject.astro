@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+}
+const { entry } = Astro.props;
+---
+<section class="next" data-next aria-labelledby="next-label">
+  <a class="next-link" href={`/${entry.id}`}>
+    <span class="next-label" id="next-label">Next project</span>
+    <span class="next-title">{entry.data.title}</span>
+    <span class="next-tagline">{entry.data.tagline}</span>
+    <span class="next-arrow" aria-hidden="true">→</span>
+  </a>
+</section>
+
+<style>
+  .next { padding: 0 0 clamp(120px, 18vh, 200px); }
+  .next-link { position: relative; display: block; width: var(--wrap); margin: 0 auto; padding: clamp(40px, 7vw, 72px); border-radius: 32px; background: var(--bg-2); transition: background-color .5s ease, transform .45s var(--ease-out); }
+  .next-link:hover { transform: translateY(-4px); }
+  .next-label { display: block; font-size: 15px; font-weight: 600; color: var(--text-3); }
+  .next-title { display: block; margin-top: 10px; font-size: clamp(48px, 8vw, 112px); font-weight: 700; letter-spacing: -.05em; line-height: .95; }
+  .next-tagline { display: block; max-width: 30em; margin-top: 16px; font-size: clamp(18px, 1.8vw, 24px); font-weight: 500; color: var(--text-2); }
+  .next-arrow { position: absolute; right: clamp(28px, 5vw, 56px); top: clamp(28px, 5vw, 56px); font-size: 28px; transition: transform .35s var(--ease-out); }
+  .next-link:hover .next-arrow { transform: translateX(6px); }
+</style>
