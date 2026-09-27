@@ -197,7 +197,7 @@ Each page renders its island context as `<script type="application/json" id="pag
 
 ## 9. Out of scope for v1
 
-Blog, Persian page, contact form, analytics, CMS, images, sitemap, Vercel project setup (Parsa connects the repo), personal-server deploy.
+Blog, Persian page, contact form, analytics, CMS, images, Vercel project setup (Parsa connects the repo), personal-server deploy. (A sitemap and robots.txt were added after launch, on 2026-09-27.)
 
 ## 10. Open items (not blocking v1)
 
