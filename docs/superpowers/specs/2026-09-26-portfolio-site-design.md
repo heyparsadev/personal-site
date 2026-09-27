@@ -147,7 +147,7 @@ A pure function picks exactly one view. Priority, highest first:
 - **Tokens:**
   - System font stack (SF on Apple devices); no web fonts.
   - Light and dark colour tokens from the prototype.
-  - Theme follows the system setting, with a manual override saved in `localStorage` and applied by an inline head script before first paint.
+  - Theme is light by default and ignores the system setting (changed 2026-09-27 at the owner's request). The visitor's choice from the toggle is saved in `localStorage` and applied by an inline head script before first paint, together with the matching `theme-color`.
 - **Home:** as in the prototype, with the real content.
   - Work cards: title, role · years, and the summary or tagline, plus a round button, "→" for pages and "+" for sheets.
   - Page cards are fully clickable through a stretched link.

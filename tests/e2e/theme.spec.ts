@@ -8,9 +8,17 @@ test('uses the light theme by default', async ({ page }) => {
 
 test.describe('dark system setting', () => {
   test.use({ colorScheme: 'dark' });
-  test('follows it when nothing is stored', async ({ page }) => {
+  test('is ignored: the site stays light until the visitor picks dark', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#fbfbfd');
+  });
+});
+
+test.describe('dark theme, chosen by the visitor', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('heyparsa-theme', 'dark'));
   });
 
   test('the keyboard-focused nav has a solid accent ring (6.96:1 on black)', async ({ page, browserName }) => {
@@ -40,10 +48,16 @@ test.describe('dark system setting', () => {
   });
 });
 
-test('a stored choice wins over the system setting', async ({ page }) => {
+test('a stored choice wins, and the browser chrome colour follows it across navigation', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('heyparsa-theme', 'dark'));
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#000000');
+  await page.locator('#work a.card-link[href="/sibkade"]').click();
+  await expect(page).toHaveURL(/\/sibkade$/);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveCount(1);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#000000');
 });
 
 test('the light Now pill uses its AA green (4.67:1 on the page, 4.81:1 on a card)', async ({ page }) => {

@@ -38,8 +38,10 @@ test('the theme toggle switches and remembers the appearance', async ({ page }) 
   await expect(island(page)).toHaveAttribute('data-view', 'menu-home');
   await page.locator('#island [data-view="menu-home"] [data-action="theme"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#000000');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#000000');
 });
 
 test('scrolling names the current section and fills the progress dot', async ({ page }) => {

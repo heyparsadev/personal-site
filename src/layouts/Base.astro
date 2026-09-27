@@ -27,16 +27,18 @@ const canonical = new URL(normalizePath(Astro.url.pathname), Astro.site);
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
-    <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fbfbfd" />
     <script is:inline>
       (() => {
         const root = document.documentElement;
+        // Light unless the visitor chose dark (mirrors resolveTheme/THEME_COLOR in src/scripts/theme.ts).
+        const color = (t) => (t === 'dark' ? '#000000' : '#fbfbfd');
         let t = null;
         try { t = localStorage.getItem('heyparsa-theme'); } catch (e) {}
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        t = t === 'dark' ? 'dark' : 'light';
         root.dataset.theme = t;
         root.style.colorScheme = t;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color(t));
         root.classList.add('js');
         if (window.__hpBoot) return;
         window.__hpBoot = true;
@@ -48,6 +50,7 @@ const canonical = new URL(normalizePath(Astro.url.pathname), Astro.site);
           const from = document.documentElement, to = e.newDocument.documentElement;
           to.dataset.theme = from.dataset.theme;
           to.style.colorScheme = from.style.colorScheme;
+          e.newDocument.querySelector('meta[name="theme-color"]')?.setAttribute('content', color(from.dataset.theme));
           for (const c of ['js', 'island-ready', 'island-failed']) if (from.classList.contains(c)) to.classList.add(c);
         });
       })();
