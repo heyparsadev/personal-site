@@ -26,6 +26,54 @@ test('the island element persists across navigation', async ({ page }) => {
   expect(await page.evaluate(() => (document.getElementById('island') as HTMLElement & { marker?: number }).marker)).toBe(42);
 });
 
+test('the named island keeps a real box and stays the same node across navigation', async ({ page }) => {
+  await page.goto('/');
+  await expect(island(page)).toHaveAttribute('data-view', 'home');
+  // The wrapper is its own view-transition group, and a group is sized to its element's box:
+  // with a 0x0 box the island painted nothing for the whole navigation.
+  expect(await island(page).evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe('island');
+  const box = (await island(page).boundingBox())!;
+  expect(box.width).toBeGreaterThan(0);
+  expect(box.height).toBeGreaterThan(0);
+  const before = await island(page).elementHandle();
+  await page.locator('#work a.card-link[href="/sibkade"]').click();
+  await expect(page).toHaveURL(/\/sibkade$/);
+  await expect(island(page)).toHaveAttribute('data-view', 'page');
+  expect(await page.evaluate((el) => el === document.getElementById('island') && el.isConnected, before)).toBe(true);
+  const after = (await island(page).boundingBox())!;
+  expect([after.width, after.height]).toEqual([box.width, box.height]);
+});
+
+test('a click inside the island wrapper but outside the pill reaches the page', async ({ page }) => {
+  await page.goto('/');
+  await expect(island(page)).toHaveAttribute('data-view', 'home');
+  const wrap = (await island(page).boundingBox())!;
+  const pill = (await page.locator('#island nav.isl').boundingBox())!;
+  const x = wrap.x + 60;
+  const y = pill.y + pill.height + 80;
+  expect(x).toBeLessThan(pill.x);
+  expect(y).toBeLessThan(wrap.y + wrap.height);
+  // Put the Barayand card under that point; its stretched link must get the click, not the wrapper.
+  await page.evaluate((py) => {
+    const card = document.querySelector('[data-card="barayand"]')!;
+    scrollTo(0, card.getBoundingClientRect().top + scrollY - (py - 40));
+  }, y);
+  await expect
+    .poll(() => page.evaluate(([px, py]) => !!document.elementFromPoint(px, py)?.closest('[data-card="barayand"]'), [x, y]))
+    .toBe(true);
+  await page.mouse.click(x, y);
+  await expect(page).toHaveURL(/\/barayand$/);
+});
+
+test('the progress dot is clickable once it splits off', async ({ page }) => {
+  await page.goto('/');
+  await expect(island(page)).toHaveAttribute('data-view', 'home');
+  await page.evaluate(() => scrollTo(0, document.getElementById('playground')!.offsetTop));
+  await expect(page.locator('#island [data-dot]')).toHaveCSS('opacity', '1');
+  await page.locator('#island [data-dot]').click();
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(2);
+});
+
 test('a project page names its chapters and offers the next project at the end', async ({ page }) => {
   await page.goto('/sibkade');
   await expect(island(page)).toHaveAttribute('data-view', 'page');

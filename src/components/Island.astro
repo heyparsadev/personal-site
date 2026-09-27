@@ -156,13 +156,19 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
      glyph/avatar class swaps) that scoped styles would not reach. Every selector is namespaced under
      .isl-wrap so these rules never style page markup that reuses a class name (.stack, .next-link),
      and so they outrank global.css's :focus-visible (one ring on the nav, round focus corners). */
-  .isl-wrap { position: fixed; z-index: 40; top: 12px; left: 50%; width: 0; height: 0; }
+  /* The wrapper is named (transition:name="island"), so every navigation paints it as its own
+     view-transition group, stacked above main's. A group is sized to its element's border box: a
+     0x0 anchor made the island vanish for the whole transition, and without the name main's opaque
+     snapshots cover it. So the wrapper has a real box holding all three layers (the goo canvas's
+     660x320), with the pill's anchor at 330/30 inside it. It takes no clicks itself; only the nav
+     and the shown dot do. */
+  .isl-wrap { position: fixed; z-index: 40; top: -18px; left: calc(50% - 330px); width: 660px; height: 320px; pointer-events: none; }
   .isl-wrap .isl-defs { position: absolute; width: 0; height: 0; }
-  .isl-wrap .isl-goo { position: absolute; left: -330px; top: -30px; width: 660px; height: 320px; pointer-events: none; filter: var(--island-fx); }
+  .isl-wrap .isl-goo { position: absolute; left: 0; top: 0; width: 660px; height: 320px; pointer-events: none; filter: var(--island-fx); }
   .isl-wrap .goo-pill, .isl-wrap .goo-dot { position: absolute; left: 0; top: 0; background: #000; will-change: transform; }
   .isl-wrap .goo-pill { width: 36px; height: 36px; border-radius: 18px; transform: translate3d(312px, 30px, 0); }
   .isl-wrap .goo-dot { width: 36px; height: 36px; border-radius: 50%; transform: translate3d(312px, 30px, 0) scale(.55); }
-  .isl-wrap .isl { position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 18px; overflow: hidden; color: #f5f5f7; cursor: pointer; outline: none; transform: translate3d(-18px, 0, 0); will-change: transform; -webkit-tap-highlight-color: transparent; }
+  .isl-wrap .isl { position: absolute; left: 330px; top: 30px; width: 36px; height: 36px; border-radius: 18px; overflow: hidden; color: #f5f5f7; cursor: pointer; outline: none; transform: translate3d(-18px, 0, 0); will-change: transform; -webkit-tap-highlight-color: transparent; pointer-events: auto; }
   .isl-wrap .isl:focus-visible { box-shadow: 0 0 0 3px rgba(0, 113, 227, .55); }
   .isl-wrap .iv { position: absolute; left: 50%; top: 50%; width: min(var(--w, 300px), calc(100vw - 24px)); height: var(--h, auto); display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 13px; font-weight: 500; letter-spacing: -.005em; white-space: nowrap; opacity: 0; visibility: hidden; filter: blur(4px); transform: translate(-50%, -50%) scale(.93); transition: opacity .12s ease, filter .12s ease, transform .18s ease, visibility 0s linear .12s; pointer-events: none; }
   .isl-wrap .iv[data-size="auto"] { width: max-content; max-width: calc(100vw - 24px); }
@@ -218,7 +224,7 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   .isl-wrap .next-link .muted { color: #98989d; }
   .isl-wrap .roll { position: relative; display: block; height: 18px; overflow: hidden; }
   .isl-wrap .roll-item { position: absolute; left: 0; top: 0; line-height: 18px; font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; transition: transform .5s var(--ease-out), opacity .3s ease; }
-  .isl-wrap .isl-dot { position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; opacity: 0; pointer-events: none; will-change: transform, opacity; }
+  .isl-wrap .isl-dot { position: absolute; left: 330px; top: 30px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; opacity: 0; pointer-events: none; will-change: transform, opacity; }
   .isl-wrap .isl-dot svg { width: 36px; height: 36px; overflow: visible; }
   .isl-wrap .isl-dot .trk { fill: none; stroke: rgba(255, 255, 255, .18); stroke-width: 2.6; }
   .isl-wrap .isl-dot .prg { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 69.12; stroke-dashoffset: 69.12; }

@@ -2,7 +2,7 @@ import type { ViewName } from './resolve';
 import type { PageCtx, PageLink } from '../../lib/page-ctx';
 import { glyphSvg, tintBackground, type GlyphName, type Tint } from '../../lib/glyphs';
 
-/** The goo layer's box starts 330px left of and 30px above the island's anchor (see .isl-goo). */
+/** The goo layer fills the wrapper; the island's anchor (.isl, .isl-dot) sits 330px in and 30px down from its corner (see .isl-wrap). */
 export const GOO_OX = 330;
 export const GOO_OY = 30;
 export const DOT = 36;
