@@ -33,6 +33,11 @@ function tell(detail: { id: string; title: string; glyph: string; tint: string[]
 
 function cleanup(): void {
   if (!opened) return;
+  // Mark stale even on this direct path (e.g. astro:before-swap tearing the sheet down without
+  // going through closeSheet() first) -- otherwise a suspended openSheet() tail, resumed once its
+  // cancelled animation's `finished` promise rejects, would see `closing` still false and
+  // re-settle/focus a session that has already been torn down.
+  opened.closing = true;
   const { sheet, card } = opened;
   for (const a of sheet.getAnimations()) a.cancel();
   sheet.classList.remove('is-active', 'is-settled');
@@ -82,16 +87,22 @@ export async function closeSheet(): Promise<void> {
   if (!opened || opened.closing) return;
   opened.closing = true;
   const { sheet, card, trigger } = opened;
-  // Cancel a still-running open so the FLIP math below measures the sheet's actual current box
-  // instead of racing the open animation for the transform/border-radius properties.
-  for (const a of sheet.getAnimations()) a.cancel();
   sheet.classList.remove('is-settled');
   layer()?.classList.remove('is-shown');
   if (card && !reduced()) {
+    // Read the sheet's actual current transform/radius *before* cancelling: if the open animation
+    // is still in flight this is its live interpolated value, not yet settled to 'none'/32px.
+    // Cancelling first (as this used to) reverts the element to its unanimated state -- always
+    // "fully open" -- so an interruption mid-open would visibly pop to full size for a frame
+    // before shrinking, instead of reversing smoothly from wherever it actually was.
+    const live = getComputedStyle(sheet);
+    const fromTransform = live.transform;
+    const fromRadius = live.borderRadius;
+    for (const a of sheet.getAnimations()) a.cancel();
     const to = card.getBoundingClientRect();
     const from = sheet.getBoundingClientRect();
     await sheet
-      .animate([{ transform: 'none', borderRadius: '32px' }, { transform: transformFor(to, from), borderRadius: '28px' }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' })
+      .animate([{ transform: fromTransform, borderRadius: fromRadius }, { transform: transformFor(to, from), borderRadius: '28px' }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' })
       .finished.catch(() => undefined);
   }
   cleanup();
