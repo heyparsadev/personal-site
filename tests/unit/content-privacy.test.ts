@@ -19,7 +19,8 @@ describe('published content', () => {
     expect(markers.length).toBeGreaterThan(5);
     for (const file of PUBLISHED.flatMap((d) => listFiles(d, ['.md']))) {
       const text = readFileSync(file, 'utf8');
-      for (const m of markers) expect(text.includes(m), `${file} leaks: ${m.slice(0, 60)}`).toBe(false);
+      // Name the marker by its index, never its text: the message lands in terminal logs and transcripts.
+      for (const [i, m] of markers.entries()) expect(text.includes(m), `${file} leaks private marker #${i}`).toBe(false);
     }
   });
 });
