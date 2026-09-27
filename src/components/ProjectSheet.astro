@@ -1,0 +1,23 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import '../styles/prose.css';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const titleId = `sheet-${entry.id}-title`;
+---
+<section class="sheet" id={`sheet-${entry.id}`} data-sheet={entry.id} data-title={d.title} data-glyph={d.glyph} data-tint={d.tint.join(',')} aria-labelledby={titleId} tabindex="-1">
+  <div class="sheet-inner">
+    <button class="sheet-close" type="button" data-sheet-close aria-label={`Close ${d.title}`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+    <p class="sheet-meta">{d.role} · {d.years}</p>
+    <h2 class="sheet-title" id={titleId}>{d.title}</h2>
+    <p class="sheet-tagline">{d.tagline}</p>
+    <div class="prose sheet-body"><Content /></div>
+  </div>
+</section>

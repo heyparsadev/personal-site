@@ -140,7 +140,7 @@ A pure function picks exactly one view. Priority, highest first:
 - The router's built-in route announcer.
 - Live-word information is also present in the page text, so nothing exists only inside the island.
 - Text contrast at least WCAG AA in both themes.
-- Real `<a>` links for navigation, so everything works without JavaScript apart from the island's motion. Sheets without JS fall back to their text rendered inline under the card.
+- Real `<a>` links for navigation, so everything works without JavaScript apart from the island's motion. Sheets without JS fall back to plain sections at the end of the home page (they live outside <main> so the open sheet can make <main> inert).
 
 ## 6. Page design
 

@@ -1,0 +1,21 @@
+.sheet-layer { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 72px 16px 24px; }
+.js .sheet-layer:not(.is-open) { display: none; }
+.sheet-backdrop { position: absolute; inset: 0; background: var(--backdrop); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
+.sheet-layer.is-shown .sheet-backdrop { opacity: 1; }
+.sheet { position: relative; width: min(720px, 100%); max-height: calc(100vh - 96px); max-height: calc(100svh - 96px); overflow: auto; overscroll-behavior: contain; border-radius: 32px; background: var(--card); box-shadow: 0 30px 80px rgba(0, 0, 0, .25); transform-origin: top left; outline: none; }
+.js .sheet:not(.is-active) { display: none; }
+.sheet-inner { padding: clamp(32px, 6vw, 64px); }
+.js .sheet .sheet-inner { opacity: 0; transition: opacity .25s ease .05s; }
+.js .sheet.is-settled .sheet-inner { opacity: 1; }
+.sheet-close { position: sticky; top: 0; z-index: 1; float: right; width: 36px; height: 36px; margin: -8px -8px 0 16px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--bg-2); }
+.sheet-close svg { width: 16px; height: 16px; }
+.sheet-meta { font-size: 14px; font-weight: 500; color: var(--text-3); }
+.sheet-title { margin-top: 8px; font-size: clamp(40px, 6vw, 72px); font-weight: 700; letter-spacing: -.045em; line-height: 1; }
+.sheet-tagline { margin-top: 14px; font-size: clamp(20px, 2.2vw, 28px); font-weight: 600; letter-spacing: -.02em; line-height: 1.25; }
+.sheet-body.prose { width: auto; margin-top: 32px; font-size: 19px; }
+.sheet-lock, .sheet-lock body { overflow: hidden; }
+
+/* Without JavaScript the sheets are ordinary sections at the end of the page. */
+html:not(.js) .sheet-layer { position: static; display: block; padding: 0 0 80px; }
+html:not(.js) .sheet-backdrop, html:not(.js) .sheet-close { display: none; }
+html:not(.js) .sheet { width: var(--wrap); max-height: none; margin: 0 auto 24px; box-shadow: none; background: var(--bg-2); }

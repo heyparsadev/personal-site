@@ -9,6 +9,7 @@ import { installThemeToggle } from './features/theme';
 import { installSections } from './features/sections';
 import { installNext } from './features/next';
 import { installRouter, readCtx } from './features/router';
+import { installSheetSync } from './features/sheet-sync';
 
 const root = document.querySelector<HTMLElement>('[data-island]');
 
@@ -25,6 +26,7 @@ if (root && !root.dataset.booted) {
   installSections(core);
   installNext(core);
   installRouter(core);
+  installSheetSync(core);
   core.setPage(core.ctx, true);
   core.start();
   document.documentElement.classList.add('island-ready');
