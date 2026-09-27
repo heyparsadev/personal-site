@@ -14,6 +14,9 @@ export class IslandCore {
   readonly reduced: boolean;
   state: IslandState;
   ctx: PageCtx;
+  /** True while a client-side navigation is settling; features that open a view on hover/focus
+   *  should stand down (see router.ts) rather than react to incidental focus/hover noise. */
+  navLock = false;
   readonly w = new Spring(DOT, 0.5, 0.72);
   readonly h = new Spring(DOT, 0.5, 0.72);
   readonly r = new Spring(DOT / 2, 0.5, 0.85);

@@ -10,7 +10,9 @@ export function installMenu(core: IslandCore): void {
   let closeT = 0;
 
   const open = () => {
-    if (core.state.sheet) return;
+    // navLock: a client-side navigation is still settling (see router.ts) -- don't let
+    // incidental hover/focus noise from that pop the menu open over the page that's arriving.
+    if (core.state.sheet || core.navLock) return;
     core.interrupt();
     core.state.word = null;
     core.emit('lit', null);
