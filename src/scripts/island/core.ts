@@ -53,10 +53,11 @@ export class IslandCore {
     for (const fn of this.listeners.get(event) ?? []) fn(payload);
   }
 
-  /** New page: transient flags reset, but an in-flight flash (e.g. 'opening') survives until a feature clears it. */
+  /** New page: transient flags reset. Only an in-flight 'opening' flash survives (router.ts clears it);
+   *  a 'jump' or 'copied' flash belongs to the page being left, and nothing on the new page would clear it. */
   setPage(ctx: PageCtx, first: boolean): void {
     this.ctx = ctx;
-    this.state = { ...initialState(ctx.kind), flash: this.state.flash };
+    this.state = { ...initialState(ctx.kind), flash: this.state.flash === 'opening' ? 'opening' : null };
     this.dom.fillPage(ctx);
     for (const fn of this.pages) fn(ctx, first);
     this.resolve(true);

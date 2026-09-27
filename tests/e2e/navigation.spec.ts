@@ -114,6 +114,21 @@ test('back returns the island to the home page state', async ({ page }) => {
   await expect(page.locator('#island [data-slot="title"]')).toHaveText('Parsa Kharazmian');
 });
 
+test('a jump still in flight does not outlive a Back to a page outside the site map', async ({ page }) => {
+  await page.goto('/nope');
+  await expect(island(page)).toHaveAttribute('data-view', 'notfound');
+  await page.locator('main a.nf-link').click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(island(page)).toHaveAttribute('data-view', 'home');
+  // Start a long smooth jump and go Back in the same task, so the jump is surely still scrolling.
+  await page.evaluate(() => {
+    document.querySelector<HTMLElement>('#island .menu [data-nav="about"]')!.click();
+    history.back();
+  });
+  await expect(page).toHaveURL(/\/nope$/);
+  await expect(island(page)).toHaveAttribute('data-view', 'notfound');
+});
+
 test('the chosen theme survives navigation', async ({ page }) => {
   await page.goto('/');
   await page.locator('#island nav.isl').hover();
