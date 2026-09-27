@@ -12,6 +12,21 @@ test.describe('dark system setting', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
+
+  test('filled hovers use the AA fill (#0071e3) under white text', async ({ page }) => {
+    await page.goto('/');
+    const link = page.locator('#contact .links a').first();
+    await link.scrollIntoViewIfNeeded();
+    await link.hover();
+    await expect(link).toHaveCSS('background-color', 'rgb(0, 113, 227)');
+    await expect(link).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(link.locator('.l-handle')).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await page.goto('/nope');
+    const home = page.locator('.nf-link');
+    await home.hover();
+    await expect(home).toHaveCSS('background-color', 'rgb(0, 113, 227)');
+    await expect(home).toHaveCSS('color', 'rgb(255, 255, 255)');
+  });
 });
 
 test('a stored choice wins over the system setting', async ({ page }) => {
