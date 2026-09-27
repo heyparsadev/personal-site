@@ -9,6 +9,19 @@ test('hero shows the name and live words', async ({ page }) => {
   await expect(page.locator('button[data-word="psychology"]')).toHaveCount(1);
 });
 
+test('the hero invites visitors to the interactive version', async ({ page }) => {
+  await page.goto('/');
+  const cta = page.locator('#top a.hero-cta');
+  await expect(cta).toHaveCount(1);
+  await expect(cta).toHaveAttribute('href', 'https://os26.heyparsa.com');
+  await expect(cta).toHaveAttribute('target', '_blank');
+  await expect(cta).toHaveAttribute('rel', /noopener/);
+  await expect(cta).toHaveAccessibleName('Try the interactive version (opens in a new tab)');
+  // It rises in with the hero lines once the title has landed, after them.
+  await expect(cta).toBeVisible();
+  await expect.poll(() => cta.evaluate((el) => getComputedStyle(el.closest('[data-after-title]')!).opacity)).toBe('1');
+});
+
 test('work lists four projects in order, as pages or sheets', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#work .card-title')).toHaveText(['Barayand', 'Sibkade', 'HelpFinity', 'IranSpoti']);

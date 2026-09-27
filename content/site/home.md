@@ -3,6 +3,7 @@ name: ["Parsa", "Kharazmian."]
 lines:
   - "Founder & CEO of [Sibkade](sibkade). Now building [Barayand](barayand)."
   - "[Startup](startup) × [Tech](tech) × [Psychology](psychology). Six years in, still early."
+interactive: { label: Try the interactive version, href: "https://os26.heyparsa.com" }
 greeting: "Hi, I’m Parsa."
 greetingSub: Welcome to heyparsa.com
 building: Barayand

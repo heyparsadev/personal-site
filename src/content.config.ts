@@ -39,6 +39,8 @@ const home = defineCollection({
   schema: z.object({
     name: z.tuple([z.string(), z.string()]),
     lines: z.tuple([z.string(), z.string()]),
+    /** The call to action under the hero lines: the interactive OS-style version of the site. */
+    interactive: z.object({ label: z.string(), href: z.string() }).optional(),
     greeting: z.string(),
     greetingSub: z.string(),
     building: z.string(),

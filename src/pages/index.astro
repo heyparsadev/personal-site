@@ -18,7 +18,7 @@ const links = Object.fromEntries(projects.filter((p) => p.data.page).map((p) => 
 const sheets = projects.filter((p) => !p.data.page).sort((a, b) => a.data.order - b.data.order);
 ---
 <Base title="Parsa Kharazmian" description="Founder & CEO of Sibkade. Now building Barayand. Startup × Tech × Psychology.">
-  <Hero name={home.data.name} lines={home.data.lines} links={links} />
+  <Hero name={home.data.name} lines={home.data.lines} links={links} interactive={home.data.interactive} />
   <WorkSection />
   <Playground intro={home.data.playgroundIntro} />
   <About />
