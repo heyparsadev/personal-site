@@ -18,8 +18,8 @@ const text = data.summary ?? data.tagline;
   {data.page ? (
     <span class="card-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
   ) : (
-    <button class="card-btn" type="button" data-sheet-open={id} aria-haspopup="dialog" aria-controls={`sheet-${id}`} aria-label={`More about ${data.title}`}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+    <button class="card-open" type="button" data-sheet-open={id} aria-haspopup="dialog" aria-controls={`sheet-${id}`} aria-label={`More about ${data.title}`}>
+      <span class="card-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg></span>
     </button>
   )}
 </article>
@@ -31,14 +31,16 @@ const text = data.summary ?? data.tagline;
   .card-title { font-size: 28px; font-weight: 700; letter-spacing: -.025em; }
   .card-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
   .card-link:focus-visible { outline: none; }
-  .card:has(.card-link:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .card:has(.card-link:focus-visible), .card:has(.card-open:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+  /* Sheet cards: the button covers the whole card (like the page cards' stretched link) and carries the "+". */
+  .card-open { position: absolute; inset: 0; z-index: 1; padding: 0; border: 0; border-radius: inherit; background: none; color: inherit; cursor: pointer; }
+  .card-open:focus-visible { outline: none; }
   .card-meta { margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--text-3); }
   .card-text { margin-top: auto; padding: 36px 52px 0 0; font-size: 19px; line-height: 1.4; letter-spacing: -.01em; color: var(--text-2); }
   .card-btn { position: absolute; right: 24px; bottom: 24px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--bg-2); transition: transform .35s var(--ease-out), background-color .2s ease; }
   .card-btn svg { width: 16px; height: 16px; }
   .card:hover .card-btn { transform: scale(1.08); }
-  /* On page cards the arrow is decoration over the card-wide link: let clicks fall through to it. */
-  span.card-btn { pointer-events: none; }
-  button.card-btn { z-index: 1; }
-  button.card-btn:active { transform: scale(.94); }
+  /* The arrow and the "+" are decoration: clicks fall through to the card-wide link or button. */
+  .card-btn { pointer-events: none; }
+  .card-open:active .card-btn { transform: scale(.94); }
 </style>

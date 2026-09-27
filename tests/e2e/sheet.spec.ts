@@ -19,6 +19,19 @@ test('the + button opens HelpFinity in a sheet and the island follows', async ({
   await expect(page.locator('main')).toHaveAttribute('inert', '');
 });
 
+test('clicking anywhere on a sheet card opens its sheet, like the page cards', async ({ page }) => {
+  for (const id of ['helpfinity', 'iranspoti']) {
+    await page.goto('/');
+    const text = page.locator(`[data-card="${id}"] .card-text`);
+    await text.scrollIntoViewIfNeeded();
+    const box = (await text.boundingBox())!;
+    // Click where a person would: on the card's text, whatever element sits there.
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.locator(`#sheet-${id}`)).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`#${id}$`));
+  }
+});
+
 test('Escape closes the sheet and returns focus to the + button', async ({ page }) => {
   await page.goto('/');
   const btn = page.locator('[data-sheet-open="helpfinity"]');
