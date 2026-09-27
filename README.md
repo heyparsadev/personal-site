@@ -55,5 +55,5 @@ The output is plain static files in `dist/`.
 
 ## License
 
-- **Code:** MIT, see [LICENSE](LICENSE). You're welcome to learn from the island and reuse it in your own projects.
+- **Code:** MIT, see [LICENSE](LICENSE). The license covers the code only, not the content below. You're welcome to learn from the island and reuse it in your own projects.
 - **Content:** everything in `content/` (the biography, project write-ups and site copy) is © Parsa Kharazmian, all rights reserved. Please don't republish it or use it for your own site.
