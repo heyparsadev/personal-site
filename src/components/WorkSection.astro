@@ -14,5 +14,6 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
 </section>
 
 <style>
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+  .cards { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 700px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
