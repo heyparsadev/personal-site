@@ -10,9 +10,7 @@ export function installMenu(core: IslandCore): void {
   let closeT = 0;
 
   const open = () => {
-    // navLock: a client-side navigation is still settling (see router.ts) -- don't let
-    // incidental hover/focus noise from that pop the menu open over the page that's arriving.
-    if (core.state.sheet || core.navLock) return;
+    if (core.state.sheet) return;
     core.interrupt();
     core.state.word = null;
     core.emit('lit', null);
@@ -28,7 +26,13 @@ export function installMenu(core: IslandCore): void {
   isl.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
     clearTimeout(closeT);
-    openT = window.setTimeout(open, OPEN_DELAY);
+    // core.navLock (set by router.ts): a client-side navigation's box resize can sweep under a
+    // stationary pointer and fire a *genuine* pointerenter with no real mouse movement involved
+    // -- checked here, at the moment the hover-open would actually fire, rather than in open()
+    // itself, because a resize can only ever produce a spurious hover; it cannot fabricate a
+    // focusin or a click, so those paths (keyboard, touch, tap) stay fully live during a
+    // navigation and this check never touches them.
+    openT = window.setTimeout(() => { if (!core.navLock) open(); }, OPEN_DELAY);
   });
   isl.addEventListener('pointerleave', (e) => {
     if (e.pointerType !== 'mouse') return;

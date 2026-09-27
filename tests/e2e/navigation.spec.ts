@@ -74,3 +74,11 @@ test('the chosen theme survives navigation', async ({ page }) => {
   await expect(page).toHaveURL(/\/sibkade$/);
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
+
+test('a keyboard user can open the menu right after a client-side navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#work a.card-link[href="/sibkade"]').click();
+  await expect(page).toHaveURL(/\/sibkade$/);
+  await page.locator('#island nav.isl').focus();
+  await expect(island(page)).toHaveAttribute('data-view', 'menu-page');
+});

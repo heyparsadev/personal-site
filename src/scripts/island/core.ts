@@ -14,8 +14,9 @@ export class IslandCore {
   readonly reduced: boolean;
   state: IslandState;
   ctx: PageCtx;
-  /** True while a client-side navigation is settling; features that open a view on hover/focus
-   *  should stand down (see router.ts) rather than react to incidental focus/hover noise. */
+  /** True while a client-side navigation's box resize is settling (see router.ts). Consulted
+   *  only by menu.ts's mouse-hover path -- a resize can produce a spurious pointerenter, but it
+   *  can't fabricate a focusin or a click, so keyboard and touch/tap are never gated by this. */
   navLock = false;
   readonly w = new Spring(DOT, 0.5, 0.72);
   readonly h = new Spring(DOT, 0.5, 0.72);
