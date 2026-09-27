@@ -47,7 +47,10 @@ export function installMenu(core: IslandCore): void {
     // itself, because a resize can only ever produce a spurious hover; it cannot fabricate a
     // focusin or a click, so those paths (keyboard, touch, tap) stay fully live during a
     // navigation and this check never touches them.
-    openT = window.setTimeout(() => { if (!core.navLock) open(); }, OPEN_DELAY);
+    // The end-of-page view (Home + next project) is itself the set of actions: hovering it must
+    // leave those links in place to be clicked, not swap them out for the menu. Keyboard focus
+    // and taps still open the menu as usual.
+    openT = window.setTimeout(() => { if (!core.navLock && core.dom.current !== 'next') open(); }, OPEN_DELAY);
   });
   isl.addEventListener('pointerleave', (e) => {
     if (e.pointerType !== 'mouse') return;

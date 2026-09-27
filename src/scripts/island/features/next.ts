@@ -35,5 +35,6 @@ export function installNext(core: IslandCore): void {
   // let an incidental focus change fight the view being used. Keyboard reach is unaffected: Tab
   // already lands on nav.isl first and opens the menu before this link is ever independently
   // reachable.
-  core.dom.slot('next-link').addEventListener('mousedown', (e) => e.preventDefault());
+  // The Home link beside it sits in the same view, so it needs the same guard.
+  for (const name of ['next-link', 'next-home']) core.dom.slot(name).addEventListener('mousedown', (e) => e.preventDefault());
 }

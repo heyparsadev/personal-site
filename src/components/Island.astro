@@ -118,6 +118,8 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
     </div>
 
     <div class="iv compact" data-view="next" data-size="auto" style="--h:40px">
+      <a class="next-home" data-slot="next-home" href="/#work"><span aria-hidden="true">←</span> Home</a>
+      <span class="next-sep" aria-hidden="true"></span>
       <a class="next-link" data-slot="next-link" href="/">
         <span class="muted">Next</span>
         <span class="glyph sm" data-slot="next-glyph"></span>
@@ -226,6 +228,9 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   @keyframes isl-spin { to { transform: rotate(360deg); } }
   .isl-wrap .next-link { display: inline-flex; align-items: center; gap: 8px; color: #f5f5f7; }
   .isl-wrap .next-link .muted { color: #98989d; }
+  /* End of a project page: a way home next to the next project, so visitors don't loop between pages. */
+  .isl-wrap .next-home { display: inline-flex; align-items: center; gap: 6px; color: #f5f5f7; white-space: nowrap; }
+  .isl-wrap .next-sep { flex: none; width: 1px; height: 16px; background: rgba(255, 255, 255, .22); }
   .isl-wrap .roll { position: relative; display: block; height: 18px; overflow: hidden; }
   .isl-wrap .roll-item { position: absolute; left: 0; top: 0; line-height: 18px; font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; transition: transform .5s var(--ease-out), opacity .3s ease; }
   .isl-wrap .isl-dot { position: absolute; left: 330px; top: 30px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; opacity: 0; pointer-events: none; will-change: transform, opacity; }

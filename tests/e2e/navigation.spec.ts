@@ -284,6 +284,30 @@ test('a project page names its chapters and offers the next project at the end',
   await expect(island(page)).toHaveAttribute('data-view', 'page');
 });
 
+test('at the end of a project page the island also offers Home, which returns to the Work section', async ({ page }) => {
+  await page.goto('/sibkade');
+  await expect(island(page)).toHaveAttribute('data-view', 'page');
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await expect(island(page)).toHaveAttribute('data-view', 'next');
+  const home = page.locator('#island [data-view="next"] [data-slot="next-home"]');
+  await expect(home).toHaveAttribute('href', '/#work');
+  await expect(home).toHaveAccessibleName('Home');
+  await expect(home).toBeVisible();
+  // A person moves onto the island and takes a moment before clicking: the actions must stay put
+  // (hovering the island elsewhere opens its menu, which would swap this view out).
+  await home.hover();
+  await page.waitForTimeout(400);
+  await expect(island(page)).toHaveAttribute('data-view', 'next');
+  await expect(home).toBeVisible();
+  await home.click();
+  await expect(page).toHaveURL(/\/#work$/);
+  await expect
+    .poll(() => page.evaluate(() => Math.abs(document.getElementById('work')!.getBoundingClientRect().top)))
+    .toBeLessThan(40);
+  await expect(island(page)).toHaveAttribute('data-view', 'section');
+  await expect(label(page)).toHaveText('Work');
+});
+
 test('the project menu lists chapters and jumps to them', async ({ page }) => {
   await page.goto('/barayand');
   await expect(island(page)).toHaveAttribute('data-view', 'page');
