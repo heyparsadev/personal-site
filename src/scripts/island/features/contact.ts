@@ -4,13 +4,14 @@ import type { IslandCore } from '../core';
 export function installContact(core: IslandCore): void {
   core.on('action', (action) => {
     if (action !== 'contact') return;
-    // The trigger button lives in the menu view this call hides; blur it first so the island
-    // doesn't see a later, browser-forced blur (relatedTarget null) as focus leaving the island
-    // and close what we just opened (mirrors the blur-before-hide in the 'copy' handler below).
-    (document.activeElement as HTMLElement | null)?.blur?.();
     core.state.menu = true;
     core.state.contact = true;
     core.resolve();
+    // The trigger button lives in the menu view this call just hid, so move focus into the panel
+    // (its view is visible as soon as it is shown). That keeps the keyboard user's place, and focus
+    // stays inside the island: menu.ts's focusout doesn't close what we just opened, and its
+    // focusin sees `contact` and doesn't reopen the menu.
+    core.dom.views.get('contact')?.querySelector<HTMLElement>('.row')?.focus({ preventScroll: true });
   });
 
   core.on('copy', async (text) => {
@@ -21,9 +22,11 @@ export function installContact(core: IslandCore): void {
       ok = false;
     }
     core.dom.setCopied(ok);
+    core.dom.announce(ok ? 'Email copied' : 'Copy failed');
     core.state.menu = false;
     core.state.contact = false;
-    (document.activeElement as HTMLElement | null)?.blur?.();
     core.flash('copied', 1500);
+    // The row that had focus is hidden now: hand focus back to the nav itself (see menu.ts).
+    core.emit('refocus');
   });
 }

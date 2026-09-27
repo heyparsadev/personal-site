@@ -5,6 +5,16 @@ import { normalizePath } from '../../../lib/page-ctx';
 const SETTLE_MS = 180;
 const CHAPTER_OFFSET = 96;
 
+/** Moves keyboard focus to a jump target without scrolling, so the next Tab continues from there.
+ *  The tabindex is temporary: once focus leaves, clicks inside the target no longer focus it. */
+function focusTarget(el: HTMLElement): void {
+  if (!el.hasAttribute('tabindex')) {
+    el.setAttribute('tabindex', '-1');
+    el.addEventListener('blur', () => el.removeAttribute('tabindex'), { once: true });
+  }
+  el.focus({ preventScroll: true });
+}
+
 /** Names the section (home) or chapter (project) being read, drives the progress dot, and smooth-scrolls in-page links. */
 export function installSections(core: IslandCore): void {
   let tops: SectionTop[] = [];
@@ -40,11 +50,15 @@ export function installSections(core: IslandCore): void {
     core.dom.setJump(id === 'top' ? 'Top' : labelOf(id), target < scrollY);
     core.state.menu = false;
     core.state.contact = false;
-    (document.activeElement as HTMLElement | null)?.blur?.();
     jumping = true;
     lastMove = performance.now();
     core.flash('jump');
     scrollTo({ top: target, behavior: core.reduced ? 'auto' : 'smooth' });
+    // Take the keyboard's place along, as a plain in-page link would: the next Tab continues from
+    // the target, not from the menu link (or dot) this jump just hid. Leaving the island this way
+    // also closes the menu through menu.ts's focusout.
+    const to = id === 'top' ? document.querySelector<HTMLElement>('main#content') : document.getElementById(id);
+    if (to) focusTarget(to);
     history.replaceState(history.state, '', id === 'top' ? location.pathname : `#${id}`);
   };
 

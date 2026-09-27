@@ -22,6 +22,21 @@ export function installMenu(core: IslandCore): void {
     core.state.contact = false;
     core.resolve();
   };
+  // Copy and Escape hide the control that has focus. Focus goes back to the nav itself, so the
+  // keyboard user keeps their place, behind a one-shot flag that skips focusin's focus-opens-menu
+  // path. Focus events fire synchronously inside focus(), so the flag can't outlive this call.
+  // If focus has already moved elsewhere on the page, it is left there.
+  let quiet = false;
+  const refocus = () => {
+    const a = document.activeElement;
+    if (a && a !== document.body && !isl.contains(a)) return;
+    quiet = true;
+    try {
+      isl.focus({ preventScroll: true });
+    } finally {
+      quiet = false;
+    }
+  };
 
   isl.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
@@ -41,6 +56,7 @@ export function installMenu(core: IslandCore): void {
   });
   isl.addEventListener('focusin', () => {
     clearTimeout(closeT);
+    if (quiet) return;
     if (!core.state.menu && !core.state.contact) open();
   });
   isl.addEventListener('focusout', (e) => {
@@ -52,7 +68,7 @@ export function installMenu(core: IslandCore): void {
   isl.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     close();
-    isl.blur();
+    refocus();
   });
 
   isl.addEventListener('click', (e) => {
@@ -72,4 +88,5 @@ export function installMenu(core: IslandCore): void {
     if (!root.contains(e.target as Node) && (core.state.menu || core.state.contact)) close();
   }, true);
   core.on('close-menu', close);
+  core.on('refocus', refocus);
 }

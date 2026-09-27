@@ -31,8 +31,9 @@ export function installNext(core: IslandCore): void {
   // view's pointer-events immediately (unlike opacity/visibility, that CSS property isn't
   // transitioned). The click then lands on nothing and the browser never navigates. Suppressing
   // just the focus (not the click) keeps the anchor's own href in charge, same spirit as the
-  // blur-before-hide calls elsewhere in the island: don't let an incidental focus change fight
-  // the view being used. Keyboard reach is unaffected: Tab already lands on nav.isl first and
-  // opens the menu before this link is ever independently reachable.
+  // focus hand-offs elsewhere in the island (contact.ts, sections.ts, menu.ts's refocus): don't
+  // let an incidental focus change fight the view being used. Keyboard reach is unaffected: Tab
+  // already lands on nav.isl first and opens the menu before this link is ever independently
+  // reachable.
   core.dom.slot('next-link').addEventListener('mousedown', (e) => e.preventDefault());
 }

@@ -72,6 +72,8 @@ test('the progress dot is clickable once it splits off', async ({ page }) => {
   await expect(page.locator('#island [data-dot]')).toHaveCSS('opacity', '1');
   await page.locator('#island [data-dot]').click();
   await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(2);
+  // Focus goes to the top of the page too, so Tab continues from there.
+  await expect(page.locator('main#content')).toBeFocused();
 });
 
 test('a project page names its chapters and offers the next project at the end', async ({ page }) => {

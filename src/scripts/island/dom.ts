@@ -34,6 +34,7 @@ export class IslandDom {
   private readonly ruler = document.createElement('canvas').getContext('2d');
   private labelText = '';
   private dotFocusable = false;
+  private announceT = 0;
 
   constructor(root: HTMLElement) {
     const q = <T extends Element>(sel: string): T => {
@@ -135,6 +136,14 @@ export class IslandDom {
 
   setCopied(ok: boolean): void {
     this.slot('copied').textContent = ok ? 'Email copied' : 'Copy blocked';
+  }
+
+  /** Says `text` through the island's polite live region. Cleared first, so a repeat is announced again. */
+  announce(text: string): void {
+    const el = this.slot('announce');
+    clearTimeout(this.announceT);
+    el.textContent = '';
+    this.announceT = window.setTimeout(() => { el.textContent = text; }, 50);
   }
 
   highlight(id: string | null): void {
