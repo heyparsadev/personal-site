@@ -32,6 +32,8 @@ All copy lives in `content/`:
 | `content/playground/*.md` | weekend projects, in `order` |
 | `content/notes/` | private notes. Git-ignored and never loaded. Where the folder exists, `npm run test:build` fails if any of it reaches the site |
 
+The link preview that shared links show (`public/og.png`, 1200×630) is the home page's first frame, set by hand in `scripts/og/card.html`. It does not read `content/`, so when the hero name, lines or greeting change, update the card too and run `npm run og`.
+
 ## Deploy
 
 The output is plain static files in `dist/`.

@@ -13,7 +13,8 @@
     "check": "astro check",
     "test": "vitest run tests/unit",
     "test:build": "astro build && vitest run tests/build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "og": "node scripts/og/render.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5"

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>heyparsa.com link preview</title>
+<style>
+  /* The link preview for heyparsa.com: the home page's first frame, set at 1200×630.
+     Colours and type follow src/styles/tokens.css (light theme) and the island's "hello" view,
+     scaled up so the island still reads in a small preview.
+     render.mjs turns this into public/og.png. If the hero copy changes, change it here too and run
+     npm run og. */
+  :root {
+    --bg: #fbfbfd; --text: #1d1d1f; --text-3: #6e6e73; --lw-line: rgba(0, 0, 0, .3);
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  .card { position: relative; width: 1200px; height: 630px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* The hero glow, in the hello view's colour (data-glow 94, 92, 230) at the light theme's .13. */
+  .glow { position: absolute; left: 50%; top: 54%; width: 1100px; height: 520px; transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(94, 92, 230, .13), rgba(94, 92, 230, 0)); }
+
+  .island { position: relative; display: flex; align-items: center; gap: 15px; height: 112px; padding: 0 34px 0 22px;
+    border-radius: 53px; background: #000; color: #f5f5f7; filter: drop-shadow(0 14px 30px rgba(0, 0, 0, .16)); }
+  .ava { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%;
+    background: linear-gradient(140deg, #5e5ce6, #bf5af2); color: #fff; font-size: 20px; font-weight: 600; }
+  .stack { display: flex; flex-direction: column; gap: 4px; }
+  .stack strong { font-size: 23px; font-weight: 600; letter-spacing: -.012em; }
+  .stack small { font-size: 18px; font-weight: 500; color: #98989d; }
+
+  h1 { position: relative; margin-top: 34px; font-size: 132px; font-weight: 700; letter-spacing: -.052em; line-height: .9; text-align: center; }
+  h1 span { display: block; }
+  .lines { position: relative; margin-top: 30px; text-align: center; font-size: 30px; font-weight: 500; letter-spacing: -.016em; line-height: 1.4; }
+  .lines .dim { color: var(--text-3); }
+  .lw { text-decoration: underline dotted var(--lw-line); text-decoration-thickness: 2px; text-underline-offset: .24em; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="glow"></div>
+  <div class="island"><span class="ava">PK</span><span class="stack"><strong>Hi, I’m Parsa.</strong><small>Welcome to heyparsa.com</small></span></div>
+  <h1><span>Parsa</span> <span>Kharazmian.</span></h1>
+  <div class="lines">
+    <p>Founder &amp; CEO of <span class="lw">Sibkade</span>. Now building <span class="lw">Barayand</span>.</p>
+    <p class="dim"><span class="lw">Startup</span> × <span class="lw">Tech</span> × <span class="lw">Psychology</span>. Six years in, still early.</p>
+  </div>
+</div>
+</body>
+</html>
