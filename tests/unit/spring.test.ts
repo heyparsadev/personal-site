@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Spring, springEasing } from '../../src/scripts/island/spring';
+import { Spring, springEasing, withLinearFallback, LINEAR_FALLBACK_EASING } from '../../src/scripts/island/spring';
 
 function run(s: Spring, seconds: number): number {
   let max = -Infinity;
@@ -58,5 +58,16 @@ describe('springEasing', () => {
   it('overshoots only when underdamped', () => {
     expect(Math.max(...values(springEasing(0.5, 1).easing))).toBeLessThanOrEqual(1.0001);
     expect(Math.max(...values(springEasing(0.5, 0.7).easing))).toBeGreaterThan(1);
+  });
+});
+
+describe('withLinearFallback', () => {
+  const curve = springEasing(0.5, 0.86);
+  it('keeps the linear() curve where the engine supports it', () => {
+    expect(withLinearFallback(curve, true)).toEqual(curve);
+  });
+  it('falls back to cubic-bezier(.22, 1, .36, 1) with the same duration where it does not', () => {
+    expect(LINEAR_FALLBACK_EASING).toBe('cubic-bezier(.22, 1, .36, 1)');
+    expect(withLinearFallback(curve, false)).toEqual({ easing: 'cubic-bezier(.22, 1, .36, 1)', duration: curve.duration });
   });
 });

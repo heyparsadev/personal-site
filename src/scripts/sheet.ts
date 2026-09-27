@@ -1,7 +1,9 @@
-import { springEasing } from './island/spring';
+import { springEasing, withLinearFallback } from './island/spring';
 
-const OPEN = springEasing(0.5, 0.86);
-const CLOSE = springEasing(0.38, 1);
+// Detected once. Without linear() (Safari before 17.2) the sheet keeps its durations on a cubic-bezier.
+const LINEAR_OK = typeof CSS !== 'undefined' && CSS.supports('transition-timing-function', 'linear(0, 1)');
+const OPEN = withLinearFallback(springEasing(0.5, 0.86), LINEAR_OK);
+const CLOSE = withLinearFallback(springEasing(0.38, 1), LINEAR_OK);
 
 interface Opened {
   id: string;
@@ -25,6 +27,16 @@ const layer = () => document.querySelector<HTMLElement>('[data-sheet-layer]');
 /** The transform that makes an element laid out at `base` appear at `target` (transform-origin: top left). */
 function transformFor(target: DOMRect, base: DOMRect): string {
   return `translate(${target.left - base.left}px, ${target.top - base.top}px) scale(${target.width / base.width}, ${target.height / base.height})`;
+}
+
+/** Plays a Web Animation and waits for it. A cancelled animation (an interrupting close, a page swap)
+ *  or one the engine rejects outright just ends the wait: the sheet then opens or closes unanimated. */
+async function play(el: HTMLElement, keyframes: Keyframe[], options: KeyframeAnimationOptions): Promise<void> {
+  try {
+    await el.animate(keyframes, options).finished;
+  } catch {
+    /* no animation */
+  }
 }
 
 function tell(detail: { id: string; title: string; glyph: string; tint: string[] } | null): void {
@@ -71,9 +83,7 @@ export async function openSheet(id: string, trigger: HTMLElement | null): Promis
     const from = card.getBoundingClientRect();
     const to = sheet.getBoundingClientRect();
     card.style.visibility = 'hidden';
-    await sheet
-      .animate([{ transform: transformFor(from, to), borderRadius: '28px' }, { transform: 'none', borderRadius: '32px' }], { duration: OPEN.duration, easing: OPEN.easing })
-      .finished.catch(() => undefined);
+    await play(sheet, [{ transform: transformFor(from, to), borderRadius: '28px' }, { transform: 'none', borderRadius: '32px' }], { duration: OPEN.duration, easing: OPEN.easing });
   }
   // closeSheet() may have interrupted the animation above (Escape, backdrop, island) -- when it
   // did, `session.closing` is already true and this stale continuation must not resurrect a
@@ -87,27 +97,30 @@ export async function closeSheet(): Promise<void> {
   if (!opened || opened.closing) return;
   opened.closing = true;
   const { sheet, card, trigger } = opened;
-  sheet.classList.remove('is-settled');
-  layer()?.classList.remove('is-shown');
-  if (card && !reduced()) {
-    // Read the sheet's actual current transform/radius *before* cancelling: if the open animation
-    // is still in flight this is its live interpolated value, not yet settled to 'none'/32px.
-    // Cancelling first (as this used to) reverts the element to its unanimated state -- always
-    // "fully open" -- so an interruption mid-open would visibly pop to full size for a frame
-    // before shrinking, instead of reversing smoothly from wherever it actually was.
-    const live = getComputedStyle(sheet);
-    const fromTransform = live.transform;
-    const fromRadius = live.borderRadius;
-    for (const a of sheet.getAnimations()) a.cancel();
-    const to = card.getBoundingClientRect();
-    const from = sheet.getBoundingClientRect();
-    await sheet
-      .animate([{ transform: fromTransform, borderRadius: fromRadius }, { transform: transformFor(to, from), borderRadius: '28px' }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' })
-      .finished.catch(() => undefined);
+  // The teardown runs whatever happens above: a close that threw would otherwise leave <main>
+  // inert and the page scroll-locked, with `closing` blocking every retry.
+  try {
+    sheet.classList.remove('is-settled');
+    layer()?.classList.remove('is-shown');
+    if (card && !reduced()) {
+      // Read the sheet's actual current transform/radius *before* cancelling: if the open animation
+      // is still in flight this is its live interpolated value, not yet settled to 'none'/32px.
+      // Cancelling first (as this used to) reverts the element to its unanimated state -- always
+      // "fully open" -- so an interruption mid-open would visibly pop to full size for a frame
+      // before shrinking, instead of reversing smoothly from wherever it actually was.
+      const live = getComputedStyle(sheet);
+      const fromTransform = live.transform;
+      const fromRadius = live.borderRadius;
+      for (const a of sheet.getAnimations()) a.cancel();
+      const to = card.getBoundingClientRect();
+      const from = sheet.getBoundingClientRect();
+      await play(sheet, [{ transform: fromTransform, borderRadius: fromRadius }, { transform: transformFor(to, from), borderRadius: '28px' }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' });
+    }
+  } finally {
+    cleanup();
+    history.replaceState(history.state, '', location.pathname + location.search);
+    trigger?.focus({ preventScroll: true });
   }
-  cleanup();
-  history.replaceState(history.state, '', location.pathname + location.search);
-  trigger?.focus({ preventScroll: true });
 }
 
 document.addEventListener('click', (e) => {

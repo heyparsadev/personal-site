@@ -58,3 +58,11 @@ export function springEasing(response: number, damping: number, maxSeconds = 2):
   pts[pts.length - 1] = 1;
   return { easing: `linear(${pts.map((p) => +p.toFixed(4)).join(', ')})`, duration: Math.round(t * 1000) };
 }
+
+/** The curve for engines without CSS `linear()` (Safari before 17.2), where Web Animations throws on it. */
+export const LINEAR_FALLBACK_EASING = 'cubic-bezier(.22, 1, .36, 1)';
+
+/** Keeps a springEasing() curve where `linear()` is supported; otherwise the same duration on the fallback curve. */
+export function withLinearFallback(curve: { easing: string; duration: number }, linearSupported: boolean): { easing: string; duration: number } {
+  return linearSupported ? curve : { easing: LINEAR_FALLBACK_EASING, duration: curve.duration };
+}

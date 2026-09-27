@@ -71,6 +71,59 @@ test('Escape pressed mid-open reverses the sheet from its live position, not a s
   expect(closeKeyframes[0].transform).not.toBe('none');
 });
 
+test.describe('engines without CSS linear() easing', () => {
+  // Safari before 17.2: CSS.supports() says no, and Web Animations throws on a linear() easing.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const w = window as unknown as { __easings: string[] };
+      w.__easings = [];
+      const supports = CSS.supports.bind(CSS) as (...a: string[]) => boolean;
+      CSS.supports = ((...a: string[]) => (a.some((s) => s.includes('linear(')) ? false : supports(...a))) as typeof CSS.supports;
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function (this: Element, keyframes: Keyframe[] | PropertyIndexedKeyframes | null, options?: number | KeyframeAnimationOptions) {
+        const easing = typeof options === 'object' ? (options.easing ?? '') : '';
+        if (this.classList.contains('sheet')) w.__easings.push(easing);
+        if (easing.startsWith('linear(')) throw new TypeError('Invalid easing');
+        return animate.call(this, keyframes, options);
+      };
+    });
+  });
+
+  test('the sheet animates on the fallback curve, then closes', async ({ page }) => {
+    await page.goto('/');
+    const btn = page.locator('[data-sheet-open="helpfinity"]');
+    await btn.scrollIntoViewIfNeeded();
+    await btn.click();
+    const sheet = page.locator('#sheet-helpfinity');
+    await expect(sheet).toHaveClass(/is-settled/);
+    await page.keyboard.press('Escape');
+    await expect(sheet).toBeHidden();
+    await expect(btn).toBeFocused();
+    await expect(page.locator('main')).not.toHaveAttribute('inert', '');
+    const easings = await page.evaluate(() => (window as unknown as { __easings: string[] }).__easings);
+    expect(easings).toEqual(['cubic-bezier(.22, 1, .36, 1)', 'cubic-bezier(.22, 1, .36, 1)']);
+  });
+});
+
+test('if Web Animations throws, the sheet opens and closes without animating and never locks the page', async ({ page }) => {
+  await page.addInitScript(() => {
+    Element.prototype.animate = () => { throw new TypeError('Web Animations unavailable'); };
+  });
+  await page.goto('/');
+  const btn = page.locator('[data-sheet-open="helpfinity"]');
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+  const sheet = page.locator('#sheet-helpfinity');
+  await expect(sheet).toHaveClass(/is-settled/);
+  await expect(sheet).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+  await expect(btn).toBeFocused();
+  await expect(page.locator('main')).not.toHaveAttribute('inert', '');
+  await expect(page.locator('html')).not.toHaveClass(/sheet-lock/);
+  expect(page.url()).not.toContain('#helpfinity');
+});
+
 test('the island closes the sheet', async ({ page }) => {
   await page.goto('/');
   const btn = page.locator('[data-sheet-open="iranspoti"]');
