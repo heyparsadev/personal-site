@@ -49,13 +49,13 @@ const parsed = lines.map((l) => parseLiveLine(l));
   .hero-line.dim { margin-top: 4px; color: var(--text-3); }
   .lw { font: inherit; color: inherit; letter-spacing: inherit; padding: 0 .1em; margin: 0 -.1em; border-radius: .3em; text-decoration: underline dotted var(--lw-line); text-decoration-thickness: 1.5px; text-underline-offset: .24em; transition: color .2s ease, background-color .2s ease, text-decoration-color .2s ease; }
   .lw:hover, .lw.is-lit, .lw:focus-visible { color: var(--accent); background: var(--lw-bg); text-decoration-style: solid; text-decoration-color: currentColor; outline: none; }
-  .hero-cta-row { margin-top: clamp(28px, 4.6vh, 44px); }
-  .hero-cta { display: inline-flex; align-items: center; gap: 7px; padding: 11px 19px 11px 21px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: -.01em; color: var(--text); background: var(--card); box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(0, 0, 0, .06); transition: color .2s ease, box-shadow .2s ease, transform .2s var(--ease-out); }
-  .hero-cta:hover { color: var(--accent); box-shadow: 0 0 0 1px var(--lw-line), 0 10px 28px rgba(0, 0, 0, .08); }
+  .hero-cta-row { margin-top: clamp(24px, 3.8vh, 38px); }
+  .hero-cta { display: inline-flex; align-items: center; gap: 7px; padding: 8px 15px 8px 17px; border-radius: 999px; font-size: 14px; font-weight: 500; letter-spacing: -.01em; color: var(--text-2); box-shadow: inset 0 0 0 1px var(--line); transition: color .2s ease, box-shadow .2s ease, transform .2s var(--ease-out); }
+  .hero-cta:hover { color: var(--text); box-shadow: inset 0 0 0 1px var(--lw-line); }
   .hero-cta:active { transform: scale(.97); transition-duration: .1s; }
   /* The global focus rule rounds corners to 6px; keep the pill a pill. */
   .hero-cta:focus-visible { border-radius: 999px; }
-  .hero-cta-arrow { font-size: 13px; transition: transform .25s var(--ease-out); }
+  .hero-cta-arrow { font-size: 12px; transition: transform .25s var(--ease-out); }
   .hero-cta:hover .hero-cta-arrow { transform: translate(2px, -2px); }
   @media (prefers-reduced-motion: reduce) {
     .hero-cta:active, .hero-cta:hover .hero-cta-arrow { transform: none; }
