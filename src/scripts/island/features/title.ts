@@ -58,7 +58,8 @@ export function installTitle(core: IslandCore): TitleControl {
       lastY = y;
       for (const f of fades) {
         f.style.opacity = (1 - seg(y, 0, H * 0.32)).toFixed(3);
-        f.style.transform = `translate3d(0, ${(-y * 0.18).toFixed(2)}px, 0)`;
+        // The parallax lag is motion; under reduced motion the lines only fade.
+        if (!core.reduced) f.style.transform = `translate3d(0, ${(-y * 0.18).toFixed(2)}px, 0)`;
       }
     }
     if (!el) return;
@@ -67,7 +68,8 @@ export function installTitle(core: IslandCore): TitleControl {
     if (key === lastKey) return;
     lastKey = key;
     const f = titleFrame(e, origin, innerWidth, y, core.reduced);
-    el.style.transform = `translate3d(${f.tx.toFixed(2)}px, ${f.ty.toFixed(2)}px, 0) scale(${f.scale.toFixed(4)})`;
+    // Under reduced motion the frame never moves the title (it only fades), so it carries no transform.
+    el.style.transform = core.reduced ? 'none' : `translate3d(${f.tx.toFixed(2)}px, ${f.ty.toFixed(2)}px, 0) scale(${f.scale.toFixed(4)})`;
     el.style.opacity = f.opacity.toFixed(3);
     el.style.filter = f.blur > 0.05 ? `blur(${f.blur.toFixed(2)}px)` : 'none';
   });

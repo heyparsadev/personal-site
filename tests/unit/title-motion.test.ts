@@ -25,6 +25,14 @@ describe('titleFrame', () => {
   it('drops blur under reduced motion', () => {
     expect(titleFrame(1, origin, 1000, 0, true).blur).toBe(0);
   });
+  it('only fades under reduced motion: no travel, no scale', () => {
+    for (const [e, y] of [[0.5, 0], [0.8, 120], [1, 300]]) {
+      const f = titleFrame(e, origin, 1000, y, true);
+      expect([f.tx, f.ty, f.scale]).toEqual([0, 0, 1]);
+      expect(f.opacity).toBe(titleFrame(e, origin, 1000, y).opacity);
+    }
+    expect(titleFrame(1, origin, 1000, 0, true).opacity).toBe(0);
+  });
   it('overshoots gently below 0', () => {
     const f = titleFrame(-0.04, origin, 1000, 0);
     expect(f.scale).toBeGreaterThan(1);

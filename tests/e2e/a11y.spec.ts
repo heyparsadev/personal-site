@@ -16,6 +16,18 @@ test.describe('reduced motion', () => {
     await expect(page.locator('#island')).toHaveAttribute('data-view', 'home', { timeout: 1500 });
     await expect(page.locator('h1')).toHaveCSS('opacity', '1');
     await expect(page.locator('h1')).toHaveCSS('filter', 'none');
+    await expect(page.locator('h1')).toHaveCSS('transform', 'none');
+  });
+
+  test('crossfades only: scrolling fades the title in place, nothing slides or scales', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#island')).toHaveAttribute('data-view', 'home', { timeout: 1500 });
+    await page.evaluate(() => scrollTo(0, innerHeight * 0.3));
+    await expect.poll(() => page.locator('h1').evaluate((e) => Number(getComputedStyle(e).opacity))).toBeLessThan(0.9);
+    await expect(page.locator('h1')).toHaveCSS('transform', 'none');
+    await expect(page.locator('main [data-scroll-fade]')).toHaveCSS('transform', 'none');
+    const scales = await page.locator('#island .iv').evaluateAll((els) => els.map((e) => new DOMMatrix(getComputedStyle(e).transform).a));
+    expect(scales.every((a) => a === 1)).toBe(true);
   });
 });
 
