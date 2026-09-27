@@ -36,6 +36,8 @@ test('playground, about and contact render', async ({ page }) => {
   await expect(page.locator('#about .belief')).toHaveCount(3);
   await expect(page.locator('#about')).toContainText('Reads Camus.');
   await expect(page.locator('#contact a[href="mailto:me@heyparsa.com"]')).toHaveCount(1);
+  await expect(page.locator('#contact a[href="https://www.linkedin.com/in/parsa-kharazmian-2507a4223"]')).toHaveCount(1);
+  await expect(page.locator('#island [data-view="contact"] a[href^="https://www.linkedin.com/in/"]')).toHaveCount(1);
 });
 
 test('home has no console errors', async ({ page }) => {

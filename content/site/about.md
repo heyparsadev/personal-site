@@ -25,6 +25,7 @@ links:
   - { label: X, handle: "@parsakzn", href: "https://x.com/parsakzn" }
   - { label: Telegram, handle: "@parsa_notes", href: "https://t.me/parsa_notes" }
   - { label: GitHub, handle: heyparsadev, href: "https://github.com/heyparsadev" }
+  - { label: LinkedIn, handle: Parsa Kharazmian, href: "https://www.linkedin.com/in/parsa-kharazmian-2507a4223" }
   - { label: Email, handle: me@heyparsa.com, href: "mailto:me@heyparsa.com", copy: me@heyparsa.com }
 ---
 

@@ -93,7 +93,7 @@ A pure function picks exactly one view. Priority, highest first:
 | section / chapter | avatar (home) or glyph (project) · rolling label; the progress dot splits off |
 | menu (home) | avatar → top · Work · Playground · About · Contact · theme toggle |
 | menu (project) | vertical card: glyph + title header, "On this page" chapter list, footer row: ← Home · Contact · theme toggle |
-| contact | X, Telegram, GitHub, Email (tap to copy); LinkedIn once its URL is known |
+| contact | X, Telegram, GitHub, LinkedIn, Email (tap to copy) |
 | copied / jump | "Email copied" / "Copy blocked"; arrow plus target section while smooth-scrolling |
 | opening | target page's glyph and title while a navigation is in flight |
 | next | "Next · Sibkade →" near the end of a project page; tapping it navigates |
@@ -201,7 +201,7 @@ Blog, Persian page, contact form, analytics, CMS, images, sitemap, Vercel projec
 
 ## 10. Open items (not blocking v1)
 
-- LinkedIn URL (About lists LinkedIn without a link). Omitted until provided.
+- ~~LinkedIn URL~~ Provided 2026-09-27; it is listed in the contact links.
 - Playground links: use the public ones recorded in the notes (GitHub repos, bargasht.barayand.io, sisyphustimer.site). Confirm before launch.
 - Brand tints for the Barayand and Sibkade glyphs are placeholders (blue→indigo, orange).
 - Wording of the Barayand chapter headings and the pull-quote choices, for review on the built pages.
