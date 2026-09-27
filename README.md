@@ -52,3 +52,8 @@ The output is plain static files in `dist/`.
   - the runtime: `dom.ts`, `core.ts`, and one file per feature in `features/`.
 - Each page ships its island context as JSON in `main #page-ctx`.
 - Design reference: `docs/superpowers/specs/2026-09-26-portfolio-site-design.md` and the prototype in `docs/prototypes/`.
+
+## License
+
+- **Code:** MIT, see [LICENSE](LICENSE). You're welcome to learn from the island and reuse it in your own projects.
+- **Content:** everything in `content/` (the biography, project write-ups and site copy) is © Parsa Kharazmian, all rights reserved. Please don't republish it or use it for your own site.
