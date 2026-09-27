@@ -5,14 +5,20 @@ The Dynamic Island at the top is the navigation. It persists across pages (`tran
 
 ## Run
 
+Needs Node 22.12 or newer.
+
 ```bash
 npm install
 npm run dev        # http://localhost:4321
 npm test           # unit tests (Vitest)
-npm run test:e2e   # browser tests (Playwright: Chromium + WebKit) against a production build
+npm run test:e2e -- --project=chromium   # browser tests (Playwright) against a production build
 npm run test:build # build, then check dist/ for private-note leaks
 npm run check      # astro check (types)
 ```
+
+Run the browser tests in Chromium only. `playwright.config.ts` also defines a WebKit project, but Playwright's WebKit build segfaults on launch on this macOS (Darwin 25), so a plain `npm run test:e2e` fails here. Check Safari by hand instead.
+
+The private-note checks (the content test in `npm test` and the `dist/` check in `npm run test:build`) compare against `content/notes/`, so they only run where that folder exists, which is the owner's machine. On a fresh clone, in CI or on Vercel they are skipped.
 
 ## Edit the text
 
@@ -24,7 +30,7 @@ All copy lives in `content/`:
 | `content/site/about.md` | about text, beliefs, timeline, "What I ship with", links |
 | `content/projects/*.md` | one file per project. `page: true` gets its own page (`/slug`); `page: false` opens as a sheet from its card. `##` headings become chapters in the island; a `>` blockquote is a pull quote |
 | `content/playground/*.md` | weekend projects, in `order` |
-| `content/notes/` | private notes. Git-ignored, never loaded, and `npm run test:build` fails if any of it reaches the site |
+| `content/notes/` | private notes. Git-ignored and never loaded. Where the folder exists, `npm run test:build` fails if any of it reaches the site |
 
 ## Deploy
 
