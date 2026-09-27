@@ -6,7 +6,7 @@
   --text: #1d1d1f; --text-2: #515154; --text-3: #6e6e73;
   --line: rgba(0, 0, 0, .08); --accent: #0066cc;
   --lw-line: rgba(0, 0, 0, .3); --lw-bg: rgba(0, 102, 204, .08);
-  --now-bg: rgba(52, 199, 89, .14); --now-fg: #248a3d;
+  --now-bg: rgba(52, 199, 89, .14); --now-fg: #1f7a36;
   --backdrop: rgba(0, 0, 0, .28);
   --island-fx: url(#isl-goo) drop-shadow(0 10px 22px rgba(0, 0, 0, .16));
   --glow-alpha: .13;

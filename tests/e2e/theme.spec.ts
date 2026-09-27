@@ -20,6 +20,12 @@ test('a stored choice wins over the system setting', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
+test('the light Now pill uses its AA green (4.67:1 on the page, 4.81:1 on a card)', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('#work .now').first()).toHaveCSS('color', 'rgb(31, 122, 54)');
+});
+
 test('skip link targets the main content', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('a.skip-link')).toHaveAttribute('href', '#content');
