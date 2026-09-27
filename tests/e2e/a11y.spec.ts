@@ -29,6 +29,23 @@ test.describe('reduced motion', () => {
     const scales = await page.locator('#island .iv').evaluateAll((els) => els.map((e) => new DOMMatrix(getComputedStyle(e).transform).a));
     expect(scales.every((a) => a === 1)).toBe(true);
   });
+
+  test('a section label changes in place: it crossfades, it does not roll', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#island')).toHaveAttribute('data-view', 'home', { timeout: 1500 });
+    await page.evaluate(() => scrollTo(0, innerHeight * 0.6));
+    await expect(page.locator('#island')).toHaveAttribute('data-view', 'section');
+    // Read both labels mid-change: the frame after the outgoing one is marked .out.
+    const transforms = await page.evaluate(async () => {
+      const roll = document.querySelector('#island [data-roll]')!;
+      scrollTo(0, document.getElementById('playground')!.offsetTop);
+      for (let i = 0; i < 60 && !roll.querySelector('.roll-item.out'); i++) await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => requestAnimationFrame(r));
+      return [...roll.querySelectorAll('.roll-item')].map((el) => getComputedStyle(el).transform);
+    });
+    expect(transforms.length).toBeGreaterThanOrEqual(2);
+    expect(transforms).toEqual(transforms.map(() => 'none'));
+  });
 });
 
 test('keyboard: skip link first, then the island opens its menu on focus', async ({ page, browserName }) => {
@@ -38,11 +55,15 @@ test('keyboard: skip link first, then the island opens its menu on focus', async
   await expect(page.locator('#island')).toHaveAttribute('data-view', 'home');
   await page.keyboard.press('Tab');
   await expect(page.locator('a.skip-link')).toBeFocused();
+  // Real controls keep global.css's ring.
+  await expect(page.locator('a.skip-link')).toHaveCSS('outline-style', 'solid');
   await page.keyboard.press('Tab');
   await expect(page.locator('#island nav.isl')).toBeFocused();
   await expect(page.locator('#island')).toHaveAttribute('data-view', 'menu-home');
   // One ring: the nav's own box-shadow, not global.css's :focus-visible outline on top of it.
   await expect(page.locator('#island nav.isl')).toHaveCSS('outline-style', 'none');
+  // ...in the solid accent (5.39:1 on the page, 3.77:1 on the pill).
+  await expect(page.locator('#island nav.isl')).toHaveCSS('box-shadow', 'rgb(0, 102, 204) 0px 0px 0px 3px');
   await page.keyboard.press('Escape');
   await expect(page.locator('#island')).toHaveAttribute('data-view', 'home');
 });
@@ -84,6 +105,17 @@ test.describe('keyboard: island actions keep focus', () => {
     await expect(page.locator('#playground')).toBeFocused();
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.activeElement !== document.getElementById('playground') && document.getElementById('playground')!.contains(document.activeElement))).toBe(true);
+  });
+
+  test('a blocked copy says "Copy blocked" on the pill and to screen readers alike', async ({ page }) => {
+    await page.evaluate(() => { navigator.clipboard.writeText = () => Promise.reject(new DOMException('Denied', 'NotAllowedError')); });
+    await tabTo(page, '#island [data-view="menu-home"] [data-action="contact"]');
+    await page.keyboard.press('Enter');
+    await tabTo(page, '#island [data-view="contact"] [data-copy]', 6);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#island')).toHaveAttribute('data-view', 'copied');
+    await expect(page.locator('#island [data-slot="copied"]')).toHaveText('Copy blocked');
+    await expect(page.locator('#island [aria-live="polite"]')).toHaveText('Copy blocked');
   });
 
   test('copying the email announces it and hands focus back to the nav, menu closed', async ({ page, context, browserName }) => {

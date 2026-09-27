@@ -22,7 +22,6 @@ export function installContact(core: IslandCore): void {
       ok = false;
     }
     core.dom.setCopied(ok);
-    core.dom.announce(ok ? 'Email copied' : 'Copy failed');
     core.state.menu = false;
     core.state.contact = false;
     core.flash('copied', 1500);

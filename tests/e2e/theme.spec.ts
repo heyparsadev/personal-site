@@ -13,6 +13,17 @@ test.describe('dark system setting', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 
+  test('the keyboard-focused nav has a solid accent ring (6.96:1 on black)', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', 'Safari skips links on Tab unless the user enables it');
+    await page.addInitScript(() => sessionStorage.setItem('heyparsa-intro-seen', '1'));
+    await page.goto('/');
+    await expect(page.locator('#island')).toHaveAttribute('data-view', 'home');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#island nav.isl')).toBeFocused();
+    await expect(page.locator('#island nav.isl')).toHaveCSS('box-shadow', 'rgb(41, 151, 255) 0px 0px 0px 3px');
+  });
+
   test('filled hovers use the AA fill (#0071e3) under white text', async ({ page }) => {
     await page.goto('/');
     const link = page.locator('#contact .links a').first();

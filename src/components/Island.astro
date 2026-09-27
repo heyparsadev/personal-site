@@ -172,7 +172,8 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   .isl-wrap .goo-pill { width: 36px; height: 36px; border-radius: 18px; transform: translate3d(312px, 30px, 0); }
   .isl-wrap .goo-dot { width: 36px; height: 36px; border-radius: 50%; transform: translate3d(312px, 30px, 0) scale(.55); }
   .isl-wrap .isl { position: absolute; left: 330px; top: 30px; width: 36px; height: 36px; border-radius: 18px; overflow: hidden; color: #f5f5f7; cursor: pointer; outline: none; transform: translate3d(-18px, 0, 0); will-change: transform; -webkit-tap-highlight-color: transparent; pointer-events: auto; }
-  .isl-wrap .isl:focus-visible { box-shadow: 0 0 0 3px rgba(0, 113, 227, .55); }
+  /* The nav's only focus indicator (no outline): the solid accent is at least 3.77:1 against the page and the pill in both themes. */
+  .isl-wrap .isl:focus-visible { box-shadow: 0 0 0 3px var(--accent); }
   .isl-wrap .iv { position: absolute; left: 50%; top: 50%; width: min(var(--w, 300px), calc(100vw - 24px)); height: var(--h, auto); display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 13px; font-weight: 500; letter-spacing: -.005em; white-space: nowrap; opacity: 0; visibility: hidden; filter: blur(4px); transform: translate(-50%, -50%) scale(.93); transition: opacity .12s ease, filter .12s ease, transform .18s ease, visibility 0s linear .12s; pointer-events: none; }
   .isl-wrap .iv[data-size="auto"] { width: max-content; max-width: calc(100vw - 24px); }
   .isl-wrap .iv.is-on { opacity: 1; visibility: visible; filter: blur(0); transform: translate(-50%, -50%); transition: opacity .28s ease .08s, filter .28s ease .08s, transform .5s var(--ease-out) .04s, visibility 0s; pointer-events: auto; }
@@ -237,5 +238,8 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   @media (prefers-reduced-motion: reduce) {
     .isl-wrap .iv { filter: none !important; transform: translate(-50%, -50%); }
     .isl-wrap .live, .isl-wrap .spinner { animation: none; }
+    /* Section labels crossfade in place on their opacity transition; the jump arrow turns at once. */
+    .isl-wrap .roll-item { transform: none !important; }
+    .isl-wrap .jump-ico { transition: none; }
   }
 </style>

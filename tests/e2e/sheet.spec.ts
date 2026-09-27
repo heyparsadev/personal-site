@@ -124,6 +124,21 @@ test('if Web Animations throws, the sheet opens and closes without animating and
   expect(page.url()).not.toContain('#helpfinity');
 });
 
+test('a keyboard-opened sheet keeps its 32 px corners and gets no focus ring', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', 'Safari skips links on Tab unless the user enables it');
+  await page.goto('/');
+  await expect(page.locator('#island')).toHaveAttribute('data-view', 'home');
+  const btn = page.locator('[data-sheet-open="helpfinity"]');
+  for (let i = 0; i < 40 && !(await btn.evaluate((b) => b === document.activeElement)); i++) await page.keyboard.press('Tab');
+  await expect(btn).toBeFocused();
+  await page.keyboard.press('Enter');
+  const sheet = page.locator('#sheet-helpfinity');
+  await expect(sheet).toHaveClass(/is-settled/);
+  await expect(sheet).toBeFocused();
+  await expect(sheet).toHaveCSS('border-radius', '32px');
+  await expect(sheet).toHaveCSS('outline-style', 'none');
+});
+
 test('the island closes the sheet', async ({ page }) => {
   await page.goto('/');
   const btn = page.locator('[data-sheet-open="iranspoti"]');

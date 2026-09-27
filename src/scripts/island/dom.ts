@@ -134,12 +134,15 @@ export class IslandDom {
     this.slot('jump-ico').style.transform = up ? 'rotate(180deg)' : '';
   }
 
+  /** Shows the copy result on the pill and says the same words through the live region. */
   setCopied(ok: boolean): void {
-    this.slot('copied').textContent = ok ? 'Email copied' : 'Copy blocked';
+    const text = ok ? 'Email copied' : 'Copy blocked';
+    this.slot('copied').textContent = text;
+    this.announce(text);
   }
 
   /** Says `text` through the island's polite live region. Cleared first, so a repeat is announced again. */
-  announce(text: string): void {
+  private announce(text: string): void {
     const el = this.slot('announce');
     clearTimeout(this.announceT);
     el.textContent = '';
