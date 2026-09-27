@@ -30,6 +30,19 @@ test('work lists four projects in order, as pages or sheets', async ({ page }) =
   await expect(page.locator('#work [data-sheet-open]')).toHaveCount(2);
 });
 
+test('clicking the arrow on a project card opens the project, like the rest of the card', async ({ page }) => {
+  await page.goto('/');
+  for (const id of ['barayand', 'sibkade']) {
+    await page.goto('/');
+    const arrow = page.locator(`[data-card="${id}"] .card-btn`);
+    await arrow.scrollIntoViewIfNeeded();
+    const box = (await arrow.boundingBox())!;
+    // Click where a person would: the arrow's centre, whatever element sits there.
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page).toHaveURL(new RegExp(`/${id}$`));
+  }
+});
+
 test('work lays out 2 × 2 on desktop and in one column on a phone', async ({ page }) => {
   for (const [width, height, cols, rows] of [[1280, 800, 2, 2], [1440, 900, 2, 2], [390, 844, 1, 4]]) {
     await page.setViewportSize({ width, height });
