@@ -20,6 +20,8 @@ test('keyboard: skip link first, then the island opens its menu on focus', async
   await page.keyboard.press('Tab');
   await expect(page.locator('#island nav.isl')).toBeFocused();
   await expect(page.locator('#island')).toHaveAttribute('data-view', 'menu-home');
+  // One ring: the nav's own box-shadow, not global.css's :focus-visible outline on top of it.
+  await expect(page.locator('#island nav.isl')).toHaveCSS('outline-style', 'none');
   await page.keyboard.press('Escape');
   await expect(page.locator('#island')).toHaveAttribute('data-view', 'home');
 });

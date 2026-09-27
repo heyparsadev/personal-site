@@ -24,6 +24,24 @@ test('Barayand page: three chapters, link out, next is Sibkade', async ({ page }
   await expect(page.locator('[data-next] a')).toHaveAttribute('href', '/sibkade');
 });
 
+test.describe('island styles stay inside the island', () => {
+  test.use({ colorScheme: 'light' });
+
+  test('the Next project title is legible in the light theme', async ({ page }) => {
+    await page.goto('/sibkade');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    const color = await page.locator('[data-next] .next-title').evaluate((el) => getComputedStyle(el).color);
+    const bg = await page.locator('[data-next] .next-link').evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(color).not.toBe('rgb(245, 245, 247)');
+    expect(color).not.toBe(bg);
+  });
+
+  test("About's stack keeps its own layout", async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#about .stack')).toHaveCSS('display', 'block');
+  });
+});
+
 test('HelpFinity and IranSpoti have no pages', async ({ page }) => {
   for (const path of ['/helpfinity', '/iranspoti']) {
     const res = await page.goto(path);
