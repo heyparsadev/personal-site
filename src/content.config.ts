@@ -31,6 +31,8 @@ const playground = defineCollection({
     year: z.number(),
     kind: z.string().optional(),
     url: z.string().optional(),
+    /** Source repository, when the live project (url) also has public code. */
+    repo: z.string().optional(),
   }),
 });
 

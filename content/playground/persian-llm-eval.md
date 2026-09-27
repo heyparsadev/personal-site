@@ -1,6 +1,6 @@
 ---
 title: Persian LLM Eval
-order: 6
+order: 7
 year: 2026
 kind: open source
 url: https://github.com/heyparsadev/persian-llm-eval

@@ -19,7 +19,12 @@ const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (awai
             <h3 class="pitem-title">
               {it.data.url ? <a href={it.data.url} target="_blank" rel="noopener">{it.data.title}<span aria-hidden="true"> ↗</span></a> : it.data.title}
             </h3>
-            <span class="pitem-meta">{[it.data.year, it.data.kind].filter(Boolean).join(' · ')}</span>
+            <span class="pitem-meta">
+              {[it.data.year, it.data.kind].filter(Boolean).join(' · ')}
+              {it.data.repo && (
+                <> · <a class="pitem-src" href={it.data.repo} target="_blank" rel="noopener">Source<span class="visually-hidden"> code for {it.data.title} on GitHub</span><span aria-hidden="true"> ↗</span></a></>
+              )}
+            </span>
           </div>
           <div class="pitem-body"><Content /></div>
         </li>
@@ -33,6 +38,8 @@ const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (awai
   .pitem { display: grid; grid-template-columns: minmax(180px, 280px) 1fr; gap: 12px 40px; padding: 28px 0; border-bottom: 1px solid var(--line); }
   .pitem-title { font-size: 21px; font-weight: 600; letter-spacing: -.018em; }
   .pitem-title a:hover { color: var(--accent); }
+  .pitem-src { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; transition: color .2s ease; }
+  .pitem-src:hover { color: var(--accent); text-decoration-color: currentColor; }
   .pitem-meta { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums; }
   .pitem-body { max-width: 62ch; font-size: 17px; line-height: 1.55; color: var(--text-2); }
   @media (max-width: 720px) { .pitem { grid-template-columns: 1fr; } }

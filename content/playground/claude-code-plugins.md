@@ -1,6 +1,6 @@
 ---
 title: Claude Code plugins
-order: 7
+order: 8
 year: 2026
 kind: open source
 url: https://github.com/heyparsadev/claude-plugins

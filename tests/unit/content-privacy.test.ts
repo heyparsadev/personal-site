@@ -11,7 +11,7 @@ const EXPECTED = [
 describe('published content', () => {
   it('exists in the new structure', () => {
     for (const f of EXPECTED) expect(existsSync(f), f).toBe(true);
-    expect(listFiles('content/playground', ['.md'])).toHaveLength(7);
+    expect(listFiles('content/playground', ['.md'])).toHaveLength(8);
   });
 
   it.skipIf(!existsSync(NOTES_DIR))('contains no private notes or figures', () => {

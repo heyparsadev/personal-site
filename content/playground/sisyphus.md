@@ -1,6 +1,6 @@
 ---
 title: Sisyphus
-order: 5
+order: 6
 year: 2026
 kind: web
 url: https://sisyphustimer.site
