@@ -14,12 +14,6 @@ interface Props {
 const { title, description, noindex = false } = Astro.props;
 // Same form as the internal links and the site map: no trailing slash, except the root "/".
 const canonical = new URL(normalizePath(Astro.url.pathname), Astro.site);
-const ease = 'cubic-bezier(.22, 1, .36, 1)';
-const out = { name: 'hp-page-out', duration: '180ms', easing: 'ease-in', fillMode: 'both' };
-const pageAnim = {
-  forwards: { old: out, new: { name: 'hp-page-rise', duration: '460ms', easing: ease, delay: '80ms', fillMode: 'both' } },
-  backwards: { old: out, new: { name: 'hp-page-fall', duration: '460ms', easing: ease, delay: '80ms', fillMode: 'both' } },
-};
 ---
 <!doctype html>
 <html lang="en" transition:animate="none">
@@ -63,12 +57,13 @@ const pageAnim = {
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
     <Island />
-    <main id="content" transition:animate={pageAnim}>
+    <main id="content">
       <slot />
     </main>
     <slot name="overlay" />
     <script>
       import '../scripts/sheet';
+      import '../scripts/page-transition';
     </script>
   </body>
 </html>

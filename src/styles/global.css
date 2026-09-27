@@ -22,14 +22,31 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .island-failed [data-island-title], .island-failed [data-after-title] { opacity: 1 !important; transform: none !important; filter: none !important; animation: none !important; }
 @keyframes hp-rise { to { opacity: 1; transform: none; filter: blur(0); } }
 
-/* Page transitions, referenced by transition:animate on <main> */
+/* Page transitions. page-transition.ts names the outgoing <main> page-out and the incoming one page-in.
+   Under one shared name they formed a single group, and the UA morphed its box by the whole scroll
+   delta: the old page slid away and the new one showed mid-body. Now each fades in place. */
 @keyframes hp-page-out { to { opacity: 0; } }
 @keyframes hp-page-rise { from { opacity: 0; transform: translateY(16px); } }
 @keyframes hp-page-fall { from { opacity: 0; transform: translateY(-16px); } }
+main[data-vt="out"] { view-transition-name: page-out; }
+main[data-vt="in"] { view-transition-name: page-in; }
+::view-transition-old(page-out) { animation: hp-page-out 180ms ease-in both; }
+::view-transition-new(page-in) { animation: hp-page-rise 460ms cubic-bezier(.22, 1, .36, 1) 80ms both; }
+html[data-astro-transition="back"]::view-transition-new(page-in) { animation-name: hp-page-fall; }
+/* A name that exists only in the new state gets its group after all the old ones, so page-in would
+   paint over the island (on Back to a scrolled home its opaque sections hid it). Keep the island on top. */
+::view-transition-group(island) { z-index: 1; }
+/* Without the View Transitions API, Astro's fallback marks <html> and the same animations run on the live
+   <main> (transition:animate used to generate these). */
+html[data-astro-transition-fallback="old"] main[data-vt="out"] { animation: hp-page-out 180ms ease-in both; }
+html[data-astro-transition-fallback="new"] main[data-vt="in"] { animation: hp-page-rise 460ms cubic-bezier(.22, 1, .36, 1) 80ms both; }
+html[data-astro-transition="back"][data-astro-transition-fallback="new"] main[data-vt="in"] { animation-name: hp-page-fall; }
 
 @media (prefers-reduced-motion: reduce) {
   .js [data-after-title] { transform: none; filter: none; }
   .landed [data-after-title] { animation-duration: .01s; }
+  /* Astro's own reduced-motion rule stops every view-transition animation; this covers its fallback. */
+  main[data-vt] { animation: none !important; }
 }
 
 /* Sections */
