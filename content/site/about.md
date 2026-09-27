@@ -16,7 +16,7 @@ stack:
   - { label: Product, text: "customer experience, brand and design systems, motion." }
   - { label: Web, text: "PHP and WordPress (twelve production plugins for Sibkade), TypeScript and Next.js with Postgres and Redis (Barayand), Python with FastAPI and Svelte (Bargasht), plain HTML, CSS and JavaScript when nothing else is needed." }
   - { label: Apple, text: "SwiftUI, Apple HIG, Liquid Glass." }
-  - { label: AI, text: "multi-model orchestration, agents with tool use, LLM evaluation and benchmarking, model selection by measured cost and quality, Claude Code plugins and skills." }
+  - { label: AI, text: "multi-model and multi-agent orchestration, agents with tool use and the Claude Agent SDK, retrieval-augmented generation (RAG), conversational AI, generative AI for text and images, prompt engineering, LLM evaluation and benchmarking, model selection by measured cost and quality, responsible AI with guardrails, Claude Code plugins and skills. Anthropic Claude, the OpenAI API and Google AI Studio, from console to API." }
   - { label: Data, text: "SQL, first-party analytics, RFM and churn modeling." }
   - { label: Growth, text: "Google Ads, referral-driven growth, SMS and Telegram as channels." }
   - { label: Pair, text: "Claude Code, daily." }
