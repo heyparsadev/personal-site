@@ -164,6 +164,8 @@ const arrow = '<path d="M12 5v14M6 13l6 6 6-6"/>';
      660x320), with the pill's anchor at 330/30 inside it. It takes no clicks itself; only the nav
      and the shown dot do. */
   .isl-wrap { position: fixed; z-index: 40; top: -18px; left: calc(50% - 330px); width: 660px; height: 320px; pointer-events: none; }
+  /* Without JavaScript the island is an empty dot that can't open: hide it (project pages show a plain home link). */
+  html:not(.js) .isl-wrap { display: none; }
   .isl-wrap .isl-defs { position: absolute; width: 0; height: 0; }
   .isl-wrap .isl-goo { position: absolute; left: 0; top: 0; width: 660px; height: 320px; pointer-events: none; filter: var(--island-fx); }
   .isl-wrap .goo-pill, .isl-wrap .goo-dot { position: absolute; left: 0; top: 0; background: #000; will-change: transform; }

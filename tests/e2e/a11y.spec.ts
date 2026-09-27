@@ -101,6 +101,30 @@ test.describe('keyboard: island actions keep focus', () => {
   });
 });
 
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('the island is hidden and a project page links home', async ({ page }) => {
+    await page.goto('/sibkade');
+    await expect(page.locator('#island')).toBeHidden();
+    const home = page.locator('main a[href="/"]');
+    await expect(home).toBeVisible();
+    await expect(home).toHaveText('← Home');
+  });
+
+  test('the home page shows no "+" buttons; the sheets are plain sections after main', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#island')).toBeHidden();
+    const plus = page.locator('[data-sheet-open]');
+    await expect(plus).toHaveCount(2);
+    for (const b of await plus.all()) await expect(b).toBeHidden();
+    for (const id of ['#sheet-helpfinity', '#sheet-iranspoti']) {
+      await expect(page.locator(id)).toBeVisible();
+      expect(await page.locator(id).evaluate((s) => !!(document.querySelector('main')!.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    }
+  });
+});
+
 test.describe('phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 

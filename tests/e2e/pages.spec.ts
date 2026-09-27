@@ -15,6 +15,8 @@ test('Sibkade page: title, tagline, chapters, pull quote, next', async ({ page }
   await expect(page.locator('.prose h2').first()).toHaveAttribute('id', 'getting-the-business-started');
   await expect(page.locator('.prose blockquote')).toHaveCount(1);
   await expect(page.locator('[data-next] a')).toHaveAttribute('href', '/barayand');
+  // The plain home link is the no-JS fallback; with JavaScript the island is the way home.
+  await expect(page.locator('main a.p-home')).toBeHidden();
 });
 
 test('Barayand page: three chapters, link out, next is Sibkade', async ({ page }) => {
