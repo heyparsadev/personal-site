@@ -1,15 +1,19 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import Island from '../components/Island.astro';
+import { normalizePath } from '../lib/page-ctx';
 import '../styles/tokens.css';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description: string;
+  /** For pages that must not be indexed (the 404): no canonical or og:url, and robots noindex. */
+  noindex?: boolean;
 }
-const { title, description } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const { title, description, noindex = false } = Astro.props;
+// Same form as the internal links and the site map: no trailing slash, except the root "/".
+const canonical = new URL(normalizePath(Astro.url.pathname), Astro.site);
 const ease = 'cubic-bezier(.22, 1, .36, 1)';
 const out = { name: 'hp-page-out', duration: '180ms', easing: 'ease-in', fillMode: 'both' };
 const pageAnim = {
@@ -24,11 +28,11 @@ const pageAnim = {
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <script is:inline>

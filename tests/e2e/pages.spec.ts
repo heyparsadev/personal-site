@@ -44,6 +44,19 @@ test.describe('island styles stay inside the island', () => {
   });
 });
 
+test('canonical and og:url match the internal links; the 404 page is noindex', async ({ page }) => {
+  for (const [path, url] of [['/', 'https://heyparsa.com/'], ['/sibkade', 'https://heyparsa.com/sibkade'], ['/barayand', 'https://heyparsa.com/barayand']]) {
+    await page.goto(path);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', url);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', url);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  }
+  await page.goto('/nope');
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+});
+
 test('HelpFinity and IranSpoti have no pages', async ({ page }) => {
   for (const path of ['/helpfinity', '/iranspoti']) {
     const res = await page.goto(path);
