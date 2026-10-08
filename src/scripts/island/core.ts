@@ -18,6 +18,10 @@ export class IslandCore {
    *  only by menu.ts's mouse-hover path -- a resize can produce a spurious pointerenter, but it
    *  can't fabricate a focusin or a click, so keyboard and touch/tap are never gated by this. */
   navLock = false;
+  /** True while the theme switch's view transition runs (see theme.ts). The browser aims every pointer
+   *  event at <html> until it ends, so menu.ts ignores the island's pointerleave and presses outside it,
+   *  and checks where the mouse really is on 'switched'. */
+  switching = false;
   readonly w = new Spring(DOT, 0.5, 0.72);
   readonly h = new Spring(DOT, 0.5, 0.72);
   readonly r = new Spring(DOT / 2, 0.5, 0.85);

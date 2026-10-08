@@ -148,6 +148,7 @@ A pure function picks exactly one view. Priority, highest first:
   - System font stack (SF on Apple devices); no web fonts.
   - Light and dark colour tokens from the prototype.
   - Theme is light by default and ignores the system setting (changed 2026-09-27 at the owner's request). The visitor's choice from the toggle is saved in `localStorage` and applied by an inline head script before first paint, together with the matching `theme-color`.
+  - Theme toggle (added 2026-10-08 at the owner's request): the icon shows the current mode, a gold sun or a silver crescent moon with a star, and morphs between them. The new mode spreads in a circle from the button over the whole page (a view transition, about 0.65 s), and a thin ring in the icon's colour draws the circle's edge across the black island. With reduced motion, or without view transitions, the colours cross-fade instead. The button is an `aria-pressed` "Dark appearance" toggle.
 - **Home:** as in the prototype, with the real content.
   - Work cards: title, role · years, and the summary or tagline, plus a round button, "→" for pages and "+" for sheets.
   - Page cards are fully clickable through a stretched link.

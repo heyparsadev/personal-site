@@ -44,6 +44,20 @@ html[data-astro-transition-fallback="old"] main[data-vt="out"] { animation: hp-p
 html[data-astro-transition-fallback="new"] main[data-vt="in"] { animation: hp-page-rise 460ms cubic-bezier(.22, 1, .36, 1) 80ms both; }
 html[data-astro-transition="back"][data-astro-transition-fallback="new"] main[data-vt="in"] { animation-name: hp-page-fall; }
 
+/* Theme switch (scripts/theme-reveal.ts): during its view transition, html.theme-vt is set and a growing
+   clip-path on the new root snapshot uncovers the new appearance over the old one, from the theme button.
+   <html transition:animate="none"> gives the root a generated name whose (layered) Astro rules hide the old
+   snapshot, so for this transition the root is plain `root` again. main drops its page-in name, which would
+   make it rise like a navigation. The island keeps its own group, live on top with no old copy, so its icon
+   morphs in place. While it runs, pointer events go to <html>; see core.switching. */
+html.theme-vt { view-transition-name: root; }
+html.theme-vt main[data-vt] { view-transition-name: none; }
+html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.theme-vt::view-transition-group(island), html.theme-vt::view-transition-new(island) { animation: none; }
+html.theme-vt::view-transition-old(island) { animation: none; opacity: 0; }
+/* The circle uncovers the new colours, not a half-second fade towards them (the fades are for switches without it). */
+html.theme-vt :not(.isl-wrap, .isl-wrap *) { transition: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   .js [data-after-title] { transform: none; filter: none; }
   .landed [data-after-title] { animation-duration: .01s; }

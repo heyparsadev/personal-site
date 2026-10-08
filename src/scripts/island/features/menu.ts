@@ -38,8 +38,28 @@ export function installMenu(core: IslandCore): void {
     }
   };
 
+  // While the theme switch runs (core.switching), the browser aims every pointer event at <html>: the
+  // island gets a pointerleave the mouse never made, and a press anywhere looks like one outside it. Both
+  // are ignored until 'switched', which then closes the menu if the mouse really did leave meanwhile.
+  let hovered = false;
+  let mouse = { x: -1, y: -1 };
+  const track = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') mouse = { x: e.clientX, y: e.clientY };
+  };
+  addEventListener('pointermove', track, { passive: true });
+  addEventListener('pointerdown', track, { passive: true });
+  core.on('switched', () => {
+    const r = isl.getBoundingClientRect();
+    if (!hovered || (mouse.x >= r.left && mouse.x <= r.right && mouse.y >= r.top && mouse.y <= r.bottom)) return;
+    hovered = false;
+    clearTimeout(closeT);
+    closeT = window.setTimeout(close, CLOSE_DELAY);
+  });
+
   isl.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
+    hovered = true;
+    track(e);
     clearTimeout(closeT);
     // core.navLock (set by router.ts): a client-side navigation's box resize can sweep under a
     // stationary pointer and fire a *genuine* pointerenter with no real mouse movement involved
@@ -53,7 +73,8 @@ export function installMenu(core: IslandCore): void {
     openT = window.setTimeout(() => { if (!core.navLock && core.dom.current !== 'next') open(); }, OPEN_DELAY);
   });
   isl.addEventListener('pointerleave', (e) => {
-    if (e.pointerType !== 'mouse') return;
+    if (e.pointerType !== 'mouse' || core.switching) return;
+    hovered = false;
     clearTimeout(openT);
     closeT = window.setTimeout(close, CLOSE_DELAY);
   });
@@ -88,6 +109,7 @@ export function installMenu(core: IslandCore): void {
   });
 
   document.addEventListener('pointerdown', (e) => {
+    if (core.switching) return;
     if (!root.contains(e.target as Node) && (core.state.menu || core.state.contact)) close();
   }, true);
   core.on('close-menu', close);
