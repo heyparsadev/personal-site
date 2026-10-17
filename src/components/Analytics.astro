@@ -1,0 +1,18 @@
+---
+/**
+ * Vercel Web Analytics (cookieless). Base.astro renders this only in builds on Vercel.
+ *
+ * Not the package's own Astro component: that reports the build-time path ("/sibkade/"), and when it
+ * differs from the address bar ("/sibkade") Vercel's script swaps it in and drops the query string, so
+ * shared links would lose their ?utm_… tags. Here every view is sent on astro:page-load (the first load and
+ * each client-side navigation, never an in-page jump) with the address exactly as the visitor sees it.
+ */
+---
+<script>
+  import { inject, pageview } from '@vercel/analytics';
+
+  inject({ framework: 'astro', disableAutoTrack: true });
+  document.addEventListener('astro:page-load', () => {
+    pageview({ route: location.pathname, path: location.pathname });
+  });
+</script>

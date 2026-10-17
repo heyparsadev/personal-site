@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '../components/Analytics.astro';
 import Island from '../components/Island.astro';
 import { normalizePath } from '../lib/page-ctx';
 import '../styles/tokens.css';
@@ -16,6 +17,9 @@ const { title, description, noindex = false } = Astro.props;
 const canonical = new URL(normalizePath(Astro.url.pathname), Astro.site);
 // The link preview every page shares: public/og.png, rendered from scripts/og/card.html (npm run og).
 const ogImage = new URL('/og.png', Astro.site);
+// Vercel Web Analytics, only in builds on Vercel (which set VERCEL): its script and page-view endpoint
+// exist only there, and local builds and tests stay free of 404s and stray page views.
+const analytics = Boolean(process.env.VERCEL);
 ---
 <!doctype html>
 <html lang="en" transition:animate="none">
@@ -72,6 +76,7 @@ const ogImage = new URL('/og.png', Astro.site);
       <slot />
     </main>
     <slot name="overlay" />
+    {analytics && <Analytics />}
     <script>
       import '../scripts/sheet';
       import '../scripts/page-transition';
