@@ -1,0 +1,161 @@
+---
+// The Playground as a black Monoglyph band: every project gets its own stage, drawn in glyphs from its content's
+// stage block (src/lib/playground-stage.ts). playgroundStyle: list in home.md brings back Playground.astro.
+import { getCollection, render } from 'astro:content';
+import type { StageConfig } from '../lib/playground-stage';
+
+interface Props {
+  intro: string;
+}
+const { intro } = Astro.props;
+const items = (await getCollection('playground')).sort((a, b) => a.data.order - b.data.order);
+const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (await render(it)).Content })));
+
+/** A project without a stage block of its own draws its title, with its year as the stat. */
+const stageOf = (data: (typeof items)[number]['data']): StageConfig =>
+  data.stage ?? {
+    scene: 'name',
+    params: {},
+    stat: { label: 'Year', value: String(data.year) },
+    legend: [{ key: '@%', text: 'its name' }],
+    range: '',
+  };
+const pad = (i: number) => String(i + 1).padStart(2, '0');
+---
+<section class="sec pg-band" id="playground" data-style="stage" aria-labelledby="playground-title">
+  <div class="wrap">
+    <div class="pg-hud">
+      <span class="pg-hud-group" aria-hidden="true"><span>{items.length} projects</span><span>weekends</span></span>
+      <span class="pg-hud-group pg-hud-end"><span aria-hidden="true">all finished</span></span>
+    </div>
+    <h2 class="pg-title" id="playground-title">Playground</h2>
+    <p class="pg-sub">{intro}</p>
+    <ul class="pg-list">
+      {rendered.map(({ it, Content }, i) => {
+        const stage = stageOf(it.data);
+        const payload = { scene: stage.scene, params: stage.params ?? {}, title: it.data.title, year: it.data.year };
+        return (
+          <li class="pitem">
+            <div class="pg-stage" data-stage={JSON.stringify(payload)}>
+              <canvas aria-hidden="true"></canvas>
+              <div class="mg-hud mg-hud-top" aria-hidden="true">
+                <span class="mg-wordmark">{it.data.title.toLowerCase()}</span>
+                <span class="mg-hud-meta">{[it.data.kind, String(it.data.year)].filter(Boolean).map((m) => <span>{m}</span>)}</span>
+              </div>
+              <div class="mg-readout" aria-hidden="true" hidden></div>
+              <div class="mg-hud mg-hud-bottom" aria-hidden="true">
+                <span class="mg-legend">{stage.legend.map((l) => <span><b class:list={{ 'mg-dim': l.dim }}>{l.key}</b>{l.text}</span>)}</span>
+                <span data-range>{stage.range}</span>
+              </div>
+            </div>
+            <div class="pg-text">
+              <span class="pg-idx" aria-hidden="true">{pad(i)}</span>
+              <h3 class="pitem-title">
+                {it.data.url ? <a href={it.data.url} target="_blank" rel="noopener">{it.data.title}<span aria-hidden="true"> ↗</span></a> : it.data.title}
+              </h3>
+              <span class="pg-meta">
+                {[it.data.year, it.data.kind].filter(Boolean).join(' · ')}
+                {it.data.repo && (
+                  <> · <a class="pitem-src" href={it.data.repo} target="_blank" rel="noopener">Source<span class="visually-hidden"> code for {it.data.title} on GitHub</span><span aria-hidden="true"> ↗</span></a></>
+                )}
+              </span>
+              <div class="pg-body"><Content /></div>
+              <p class="pg-stat">
+                <span class="pg-stat-label" data-stat-label aria-hidden="true">{stage.stat.label}</span>
+                <span class="pg-stat-value" data-stat-value aria-hidden="true">{stage.stat.value}</span>
+                <span class="visually-hidden">{stage.stat.sub ?? `${stage.stat.label}: ${stage.stat.value}.`}</span>
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</section>
+
+<style is:global>
+  /* Geist Mono and Geist Pixel (OFL 1.1, public/fonts/OFL.txt). Only this band uses them, and nothing preloads them. */
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("/fonts/geist-mono-latin.woff2") format("woff2");
+    font-weight: 400 500;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("/fonts/geist-mono-symbols.woff2") format("woff2");
+    font-weight: 400 500;
+    font-display: swap;
+    unicode-range: U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F;
+  }
+  @font-face {
+    font-family: "Geist Pixel";
+    src: url("/fonts/geist-pixel-latin.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+</style>
+
+<style>
+  /* Monoglyph's stage tokens: the stage is black in both themes. */
+  .pg-band {
+    --stage-ink: #fff; --stage-text: #f5f5f7; --stage-muted: rgba(255, 255, 255, .62); --stage-hud: rgba(255, 255, 255, .5);
+    --stage-label: rgba(255, 255, 255, .45); --stage-edge: rgba(255, 255, 255, .16); --stage-readout: rgba(255, 255, 255, .65);
+    --stage-veil: rgba(0, 0, 0, .8);
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-pixel: "Geist Pixel", "Geist Mono", ui-monospace, monospace;
+    background: #000;
+    color: var(--stage-text);
+  }
+  /* In dark the page is as black as the band, so hairlines mark where it starts and ends. */
+  :global(:root[data-theme="dark"]) .pg-band { border-block: 1px solid var(--line); }
+  /* The site's accent ring is too dark on black. */
+  .pg-band :focus-visible { outline-color: #fff; }
+
+  .pg-hud { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; margin-bottom: 30px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
+  .pg-hud-group { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+  .pg-title { font: 400 clamp(64px, 11vw, 148px)/.9 var(--font-pixel); letter-spacing: 0; text-transform: lowercase; color: var(--stage-ink); }
+  .pg-sub { margin: 24px 0 64px; max-width: 34em; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: var(--stage-muted); }
+
+  .pg-list { list-style: none; border-top: 1px solid var(--stage-edge); }
+  .pitem { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px 48px; align-items: start; padding: 40px 0; border-bottom: 1px solid var(--stage-edge); }
+
+  /* One stage: Monoglyph's Stage, Hud and Readout. */
+  .pg-stage { position: relative; overflow: hidden; height: clamp(300px, 30vw, 360px); background: #000; border: 1px solid rgba(255, 255, 255, .12); container-type: inline-size; }
+  .pg-stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
+  .mg-hud { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 22px 24px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); pointer-events: none; }
+  .mg-hud-top { top: 0; }
+  .mg-hud-bottom { bottom: 0; }
+  .mg-hud-meta, .mg-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .mg-legend b { margin-right: 4px; font-weight: 400; color: var(--stage-ink); }
+  .mg-legend b.mg-dim { color: var(--stage-label); }
+  .mg-wordmark { font: 400 19px/1 var(--font-pixel); letter-spacing: 0; text-transform: none; color: var(--stage-ink); white-space: nowrap; }
+  .mg-readout { position: absolute; top: 0; left: 0; z-index: 2; display: grid; gap: 1px; padding: 8px 10px; border: 1px solid var(--stage-edge); border-radius: 8px; background: var(--stage-veil); font: 400 12px/1.4 var(--font-mono); color: var(--stage-readout); white-space: nowrap; pointer-events: none; }
+  .mg-readout[hidden] { display: none; }
+  /* The readout's lines are written at runtime, so they carry no scope attribute. */
+  .mg-readout :global(b) { font-size: 14px; font-weight: 500; color: var(--stage-ink); }
+
+  .pg-text { padding-top: 4px; }
+  .pg-idx { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; color: var(--stage-hud); font-variant-numeric: tabular-nums; }
+  .pitem-title { margin-top: 12px; font-size: 24px; font-weight: 600; letter-spacing: -.02em; color: var(--stage-ink); }
+  .pitem-title a:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .pg-meta { display: block; margin-top: 8px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
+  .pitem-src { text-decoration: underline; text-decoration-color: var(--stage-edge); text-underline-offset: 3px; }
+  .pitem-src:hover { color: var(--stage-ink); }
+  .pg-body { margin-top: 16px; max-width: 58ch; font-size: 16px; line-height: 1.55; color: var(--stage-muted); }
+  .pg-body :global(em) { color: var(--stage-text); }
+  .pg-stat { display: grid; gap: 10px; margin-top: 24px; }
+  .pg-stat-label { font-size: 13px; line-height: 1.3; color: var(--stage-muted); }
+  .pg-stat-value { font: 400 44px/.95 var(--font-pixel); color: var(--stage-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 760px) {
+    .pitem { grid-template-columns: minmax(0, 1fr); padding: 28px 0 36px; }
+    .pg-stage { height: clamp(290px, 84vw, 350px); }
+  }
+  @media (max-width: 520px) {
+    .mg-hud { padding: 18px 20px; }
+    .mg-hud-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
