@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Playground in Monoglyph · prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist+Pixel&family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Site tokens and base: copied from src/styles/tokens.css and global.css */
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, system-ui, sans-serif;
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+    --wrap: min(1080px, 88vw);
+    --bg: #fbfbfd; --bg-2: #f5f5f7; --card: #fff;
+    --text: #1d1d1f; --text-2: #515154; --text-3: #6e6e73;
+    --line: rgba(0, 0, 0, .08); --accent: #0066cc;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000; --bg-2: #0b0b0c; --card: #161617;
+    --text: #f5f5f7; --text-2: #a1a1a6; --text-3: #8e8e93;
+    --line: rgba(255, 255, 255, .1); --accent: #2997ff;
+    color-scheme: dark;
+  }
+  /* Monoglyph's stage tokens (tokens.json): the stage is black in both themes */
+  :root {
+    --stage: #000; --stage-ink: #fff; --stage-text: #f5f5f7;
+    --stage-muted: rgba(255, 255, 255, .62); --stage-hud: rgba(255, 255, 255, .5); --stage-label: rgba(255, 255, 255, .45);
+    --stage-readout: rgba(255, 255, 255, .65); --stage-edge: rgba(255, 255, 255, .16); --stage-veil: rgba(0, 0, 0, .8);
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-pixel: "Geist Pixel", "Geist Mono", ui-monospace, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); -webkit-text-size-adjust: 100%; overflow-x: clip; }
+  body { font-family: var(--font-sans); color: var(--text); background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: clip; transition: background-color .5s ease, color .5s ease; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: var(--wrap); margin: 0 auto; }
+  .sec { position: relative; padding: clamp(96px, 14vh, 160px) 0; background: var(--bg); transition: background-color .5s ease; }
+  .sec.alt { background: var(--bg-2); }
+  .sec-title { font-size: clamp(44px, 6.4vw, 88px); font-weight: 700; letter-spacing: -.045em; line-height: 1; margin-bottom: clamp(36px, 6vh, 64px); }
+  .sec-sub { margin: -24px 0 48px; max-width: 40em; font-size: clamp(19px, 1.7vw, 24px); font-weight: 500; letter-spacing: -.015em; color: var(--text-2); }
+  /* Playground rows: copied from src/components/Playground.astro */
+  .pitem-title { font-size: 21px; font-weight: 600; letter-spacing: -.018em; }
+  .pitem-title a:hover { color: var(--accent); }
+  .pitem-src { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; transition: color .2s ease; }
+  .pitem-src:hover { color: var(--accent); text-decoration-color: currentColor; }
+  .pitem-meta { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .pitem-body { max-width: 62ch; font-size: 17px; line-height: 1.55; color: var(--text-2); }
+
+  /* Monoglyph's stage, HUD, answer and readout (components/bundle.css) */
+  .mg-stage { position: relative; overflow: hidden; background: var(--stage); color: var(--stage-text); container-type: inline-size; }
+  .mg-stage > canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
+  .mg-hud { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 22px 24px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); pointer-events: none; }
+  .mg-hud-top { top: 0; }
+  .mg-hud-bottom { bottom: 0; }
+  .mg-hud-meta, .mg-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .mg-legend b { margin-right: 4px; font-weight: 400; color: var(--stage-ink); }
+  .mg-legend b.mg-dim { color: var(--stage-label); }
+  .mg-wordmark { font: 400 19px/1 var(--font-pixel); letter-spacing: 0; text-transform: none; color: var(--stage-ink); white-space: nowrap; }
+  .mg-answer { position: absolute; top: 74px; left: 24px; right: 24px; pointer-events: none; }
+  .mg-answer-label { font: 400 15px/1.3 var(--font-sans); color: var(--stage-muted); }
+  .mg-answer-value { margin-top: 10px; font-family: var(--font-pixel); font-size: min(96px, calc((100cqw - 48px) / var(--chars, 7) * 1.4)); line-height: .95; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--stage-text); }
+  .mg-answer-sub { margin-top: 14px; font: 400 13px/1.4 var(--font-mono); color: var(--stage-muted); }
+  .mg-readout { position: absolute; top: 0; left: 0; z-index: 2; display: grid; gap: 1px; padding: 8px 10px; border: 1px solid var(--stage-edge); border-radius: 8px; background: var(--stage-veil); font: 400 12px/1.4 var(--font-mono); color: var(--stage-readout); white-space: nowrap; pointer-events: none; }
+  .mg-readout[hidden] { display: none; }
+  .mg-readout b { font-size: 14px; font-weight: 500; color: var(--stage-ink); }
+  @media (max-width: 520px) {
+    .mg-hud { padding: 18px 20px; }
+    .mg-hud-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .mg-answer { top: 64px; left: 20px; right: 20px; }
+  }
+  .pg-idx { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+  /* Layout 1: one stage, sticky, beside the list (Hindsight's stage and panel) */
+  .pg1 { display: grid; grid-template-columns: minmax(0, 7fr) minmax(300px, 5fr); gap: 0 56px; align-items: start; }
+  .pg1-stage { --stage-h: min(640px, calc(100svh - 140px)); position: sticky; top: max(88px, calc(50svh - var(--stage-h) / 2)); height: var(--stage-h); }
+  .pg1-list { list-style: none; border-top: 1px solid var(--line); }
+  .pg1-item { padding: 26px 0 30px; border-bottom: 1px solid var(--line); cursor: default; }
+  .pg1-head { display: grid; grid-template-columns: 34px 1fr; align-items: baseline; }
+  .pg1-item .pitem-title { font-size: 20px; color: var(--text-2); transition: color .25s ease; }
+  .pg1-item .pitem-meta { grid-column: 2; }
+  .pg1-item .pitem-body { margin: 12px 0 0 34px; font-size: 16px; color: var(--text-3); transition: color .25s ease; }
+  .pg1-item.is-on .pitem-title { color: var(--text); }
+  .pg1-item.is-on .pitem-body { color: var(--text-2); }
+  .pg1-item.is-on .pg-idx { color: var(--text); }
+  /* In dark the page is as black as the stage, so a hairline keeps them apart (Monoglyph's rule). */
+  :root[data-theme="dark"] .pg1-stage { box-shadow: 0 0 0 1px var(--line); }
+  @media (max-width: 900px) {
+    .pg1 { grid-template-columns: minmax(0, 1fr); }
+    .pg1-stage { --stage-h: clamp(330px, 54svh, 460px); top: 10px; z-index: 3; }
+    .pg1-stage .mg-answer-value { font-size: min(60px, calc((100cqw - 48px) / var(--chars, 7) * 1.4)); }
+    .pg1-stage .mg-answer-sub { display: none; }
+    .pg1-list { margin-top: 18px; }
+    .pg1-item .pitem-body { margin-left: 0; }
+  }
+
+  /* Layout 2: the whole section is the stage, and every project gets its own drawing */
+  .sec.pg2 { background: var(--stage); color: var(--stage-text); border-block: 1px solid var(--line); }
+  .pg2-hud { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-bottom: 30px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
+  .pg2-hud span:first-child { display: flex; gap: 18px; }
+  .pg2-title { font: 400 clamp(64px, 11vw, 148px)/.9 var(--font-pixel); color: var(--stage-ink); }
+  .pg2-sub { margin: 24px 0 64px; max-width: 34em; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: var(--stage-muted); }
+  .pg2-list { list-style: none; border-top: 1px solid var(--stage-edge); }
+  .pg2-item { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px 48px; align-items: start; padding: 40px 0; border-bottom: 1px solid var(--stage-edge); }
+  .pg2-stage { height: clamp(300px, 30vw, 360px); border: 1px solid rgba(255, 255, 255, .12); }
+  .pg2 .pg-idx { color: var(--stage-hud); }
+  .pg2-name { margin-top: 12px; font-size: 24px; font-weight: 600; letter-spacing: -.02em; color: var(--stage-ink); }
+  .pg2-name a:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .pg2-meta { display: block; margin-top: 8px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
+  .pg2-meta a { text-decoration: underline; text-decoration-color: var(--stage-edge); text-underline-offset: 3px; }
+  .pg2-meta a:hover { color: var(--stage-ink); }
+  .pg2-body { margin-top: 16px; max-width: 58ch; font-size: 16px; line-height: 1.55; color: var(--stage-muted); }
+  .pg2-body em { color: var(--stage-text); }
+  .pg2-stat { display: grid; gap: 10px; margin-top: 24px; }
+  .pg2-stat-label { font: 400 13px/1.3 var(--font-sans); color: var(--stage-muted); }
+  .pg2-stat-value { font: 400 44px/.95 var(--font-pixel); color: var(--stage-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) {
+    .pg2-item { grid-template-columns: minmax(0, 1fr); padding: 28px 0 36px; }
+    .pg2-stage { height: clamp(290px, 84vw, 350px); }
+  }
+
+  /* Prototype chrome, not part of the design */
+  .proto-note { padding: 12px 16px; font: 400 13px/1.8 Vazirmatn, var(--font-sans); color: var(--text-2); background: var(--bg-2); border-bottom: 1px solid var(--line); text-align: center; }
+  .proto-note b { font-weight: 600; color: var(--text); }
+  .stub { padding: 56px 0; }
+  .stub p { font: 400 13px/1.6 Vazirmatn, var(--font-sans); color: var(--text-3); }
+  .proto-switch { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; z-index: 20; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(28, 28, 30, .92); box-shadow: 0 10px 30px rgba(0, 0, 0, .28); font: 500 13px/1 Vazirmatn, var(--font-sans); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .proto-switch button { padding: 9px 14px; border-radius: 999px; color: rgba(255, 255, 255, .78); white-space: nowrap; }
+  .proto-switch button[aria-pressed="true"] { background: #fff; color: #000; }
+  .proto-switch i { width: 1px; margin: 6px 2px; background: rgba(255, 255, 255, .2); }
+</style>
+</head>
+<body>
+<p class="proto-note" dir="rtl" lang="fa"><b>نمونه‌ی دورریختنی:</b> بخش Playground با دیزاین سیستم Monoglyph. به سایت اصلی دست نزده و متن‌ها عین سایته. با دکمه‌های پایین صفحه بین دو چیدمان و حالت تیره جابه‌جا شو.</p>
+<main>
+  <section class="sec alt stub" aria-hidden="true"><div class="wrap"><p dir="rtl" lang="fa">↑ اینجا بخش Work تموم می‌شه</p></div></section>
+  <section class="sec" id="playground" aria-labelledby="playground-title"></section>
+  <section class="sec alt" id="about">
+    <div class="wrap">
+      <h2 class="sec-title">About</h2>
+      <p class="sec-sub">I’m Parsa. I run Sibkade, a digital gift-card business I started in 2020, and I’m building Barayand, a multi-model AI platform for Persian speakers. I trained as a psychologist and write about AI in Persian most days.</p>
+    </div>
+  </section>
+</main>
+<div class="proto-switch" dir="rtl" lang="fa" role="group" aria-label="نمونه">
+  <button type="button" data-layout="1" aria-pressed="true">۱ · یه صحنه کنار لیست</button>
+  <button type="button" data-layout="2" aria-pressed="false">۲ · کل بخش مشکی</button>
+  <i></i>
+  <button type="button" data-theme-toggle aria-pressed="false">تیره</button>
+</div>
+<script>
+(() => {
+'use strict';
+
+// ---- content: copied from content/playground/*.md, in their order --------------------------------------
+const INTRO = 'Things I build on weekends, for the fun of it. None of these are companies. All of them are finished.';
+const ITEMS = [
+  { key: 'bargasht', title: 'Bargasht', year: 2026, kind: 'live', url: 'https://bargasht.barayand.io', body: 'A personal archive that eats everything you save and gives it back when it matters. Reels, podcasts, screenshots, book pages, voice notes: it transcribes, summarizes, and files them, then resurfaces the right one on your phone when you are likely to want it. Built on the bet that people do not pay to search their own saves; they pay to be reminded. I use it every day.' },
+  { key: 'applybot', title: 'ApplyBot', year: 2026, body: 'A Persian Telegram agent for students applying to graduate programs abroad. It interviews you, researches real programs on the live web, reads the official admissions pages, and writes a tailored CV and statement of purpose. It never submits anything for you. My first end-to-end agent with tools, memory, and a budget.' },
+  { key: 'apsis', title: 'Apsis', year: 2026, kind: 'iOS', body: 'A clock that refuses to behave like one. A planet hangs in the dark, the time floats above it, and the day runs at that world’s real length: a Martian day is 37 minutes longer than ours. Tilt the phone and the planet lags behind, as if it had mass. No account, no notifications, no streaks. <em>Time, kept at a distance.</em>' },
+  { key: 'descent', title: 'The Descent', year: 2026, kind: 'web', url: 'https://thedescents.site', body: 'A single page that turns your scrollbar into 3.8 billion years. You start as one glowing dot. As you scroll, the branches of the tree of life merge into yours, one by one, until everything converges on the last universal common ancestor. Then the camera pulls back and you are one lit tip among millions. No libraries, no build step.' },
+  { key: 'delta', title: 'Delta', year: 2026, kind: 'web', url: 'https://delta.heyparsa.com', repo: 'https://github.com/heyparsadev/delta', body: 'My career as a river, seen from a satellite. The river is grown in code from a six-year timeline, and every channel is a real project: IranSpoti meanders until it cuts itself off into an oxbow lake, Sibkade becomes the main stem, HelpFinity splits away and dries, and Barayand braids toward the sea. Scrolling moves through time from the source in 2019 to the sea today, then the camera pulls back to orbit. The same story also plays as an Apple-style keynote. Plain HTML, CSS and WebGL, no dependencies.' },
+  { key: 'sisyphus', title: 'Sisyphus', year: 2026, kind: 'web', url: 'https://sisyphustimer.site', body: 'A focus timer built on Camus’s <em>The Myth of Sisyphus</em>, drawn like a Greek black-figure vase. You name a task and a length of time, and Sisyphus pushes a boulder up a mountain with no summit. When the time runs out, the boulder rolls back down, and your break is the walk down after it: the only time you hear from Camus. Give up halfway and the boulder rolls back over your task and shatters it. Each day it asks one question before the first push: can you imagine Sisyphus happy?' },
+  { key: 'eval', title: 'Persian LLM Eval', year: 2026, kind: 'open source', url: 'https://github.com/heyparsadev/persian-llm-eval', body: 'A benchmark for how well language models actually handle Persian: 300 items across 10 tracks, from reading and culture to hard math and strict instruction following, with deterministic scoring and bootstrap confidence intervals. I built it because I wanted a Persian yardstick to exist, and nothing did. The result I did not expect: on strict instruction following, the biggest and most expensive model lost to a smaller one.' },
+  { key: 'plugins', title: 'Claude Code plugins', year: 2026, kind: 'open source', url: 'https://github.com/heyparsadev/claude-plugins', body: 'I learned Claude Code by building the things I needed from it. <em>Venture</em> is a business copilot: market, competitors, customer discovery, unit economics, go-to-market, all feeding one shared workspace and ending in a board review. <em>Idea Validator</em> turns the idea chapter of Anthropic’s Founder’s Playbook into a ten-stage pipeline with kill criteria written first, evidence graded by its source, and one wall it refuses to cross: it will not fake customer interviews. <em>Liquid Glass</em> teaches Claude Apple’s iOS 26 design language, with the API, the guidelines, and nine working screens.' },
+];
+// The v1.1 leaderboard from the persian-llm-eval README: public_eval, hard, and their mean.
+const RUNS = [
+  ['gpt-5.5 + thinking (high)', 0.9702, 0.9197, 0.9450], ['gpt-5.5', 0.9622, 0.9183, 0.9403],
+  ['gpt-5.5 + thinking (medium)', 0.9651, 0.9147, 0.9399], ['gpt-5', 0.9659, 0.8903, 0.9281],
+  ['gpt-5-mini', 0.9558, 0.8979, 0.9269], ['claude-sonnet-4-6', 0.9318, 0.9090, 0.9204],
+  ['gpt-5 + thinking (medium)', 0.9479, 0.8774, 0.9127], ['claude-opus-5.5, low', 0.9269, 0.8969, 0.9119],
+  ['claude-opus-5.5, high', 0.9239, 0.8881, 0.9060], ['claude-opus-4-7', 0.9296, 0.8766, 0.9031],
+  ['claude-opus-5.5, medium', 0.9246, 0.8730, 0.8988], ['gpt-5-nano', 0.9397, 0.8502, 0.8950],
+  ['claude-sonnet-5.5, high', 0.9164, 0.8617, 0.8890], ['claude-sonnet-5.5, no thinking', 0.8961, 0.8562, 0.8762],
+  ['claude-sonnet-5.5, medium', 0.8680, 0.8806, 0.8743], ['claude-sonnet-5.5, low', 0.8708, 0.8680, 0.8694],
+  ['claude-haiku-4-5', 0.8434, 0.8219, 0.8326],
+];
+
+// ---- the glyph engine, after Monoglyph's stage.js ---------------------------------------------------------
+// 12px Geist Mono glyphs on 15px rows. One ink value picks both the glyph from the ramp and its alpha.
+const SIZE = 12;
+const LINE = 15;
+const FONT = `400 ${SIZE}px "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace`;
+const RAMP = ' .:-=+*#%@';
+const NOISE = '#%&@$*+=/\\<>?!';
+const white = (a) => `rgba(255, 255, 255, ${a.toFixed(3)})`;
+const INK = [...RAMP].map((_, level) => white(0.16 + (0.84 * level) / 9));
+const ST = { bright: white(1), label: white(0.45), grid: white(0.16), scan: white(0.35), loss: white(0.24) };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const norm3 = (x, y, z) => { const l = Math.hypot(x, y, z); return [x / l, y / l, z / l]; };
+
+/** Deterministic noise in [0, 1) for a cell and a time slot (Monoglyph's). */
+function hash(x, y, z) {
+  let h = Math.imul(x + 1, 0x27d4eb2d) ^ Math.imul(y + 1, 0x165667b1) ^ Math.imul(z + 1, 0x9e3779b1);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), u = x - xi, v = y - yi;
+  const s = (t) => t * t * (3 - 2 * t);
+  const a = hash(xi, yi, 3), b = hash(xi + 1, yi, 3), c = hash(xi, yi + 1, 3), d = hash(xi + 1, yi + 1, 3);
+  return a + (b - a) * s(u) + (c - a) * s(v) + (a - b - c + d) * s(u) * s(v);
+}
+function erf(x) {
+  const sign = Math.sign(x), a = Math.abs(x), t = 1 / (1 + 0.3275911 * a);
+  return sign * (1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-a * a));
+}
+const phi = (z) => 0.5 * (1 + erf(z / Math.SQRT2));
+const clock = (sec) => { const s = Math.max(0, Math.ceil(sec)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+/** Mars Coordinated Time in hours, from the current UTC (Allison and McEwen). */
+function marsHours() {
+  const jdTT = Date.now() / 86400000 + 2440587.5 + 69.184 / 86400;
+  const msd = (jdTT - 2405522.0028779) / 1.0274912517;
+  return (((msd % 1) + 1) % 1) * 24;
+}
+function marsTime() {
+  const h = marsHours(), hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+/** Monoglyph's decode: the digits that changed flicker, then settle left to right in 42ms steps. */
+const decodeTimers = new WeakMap();
+function decodeTo(el, text, { duration = 480 } = {}) {
+  const from = el.dataset.text ?? '';
+  el.dataset.text = text;
+  clearTimeout(decodeTimers.get(el));
+  if (reduce.matches) { el.textContent = text; return; }
+  const same = from.length === text.length;
+  const settleAt = [...text].map((ch, i) => (same && from[i] === ch) || !/\d/.test(ch) ? 0 : duration * (0.3 + (0.7 * i) / text.length));
+  const start = performance.now();
+  const step = () => {
+    const elapsed = performance.now() - start;
+    let pending = false;
+    el.textContent = [...text].map((ch, i) => {
+      if (elapsed >= settleAt[i]) return ch;
+      pending = true;
+      return String(Math.floor(Math.random() * 10));
+    }).join('');
+    if (pending) decodeTimers.set(el, setTimeout(step, 42));
+  };
+  step();
+}
+
+/** A line of glyphs between two cells; / \ | - follow its angle on screen, where cells are 2× taller than wide. */
+function stroke(g, c0, r0, c1, r1, v, pri, glyph) {
+  const dx = (c1 - c0) * g.cw, dy = (r1 - r0) * LINE;
+  const angle = (Math.atan2(Math.abs(dy), Math.abs(dx)) * 180) / Math.PI;
+  const ch = glyph || (angle > 64 ? '|' : angle < 22 ? '-' : dx * dy > 0 ? '\\' : '/');
+  const steps = Math.ceil(Math.max(Math.abs(c1 - c0), Math.abs(r1 - r0)) * 2) + 1;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    g.glyph(ch, Math.round(lerp(c0, c1, t)), Math.round(lerp(r0, r1, t)), v, pri);
+  }
+}
+
+class Stage {
+  constructor(root, parts) {
+    this.root = root;
+    this.parts = parts;
+    this.canvas = root.querySelector('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.readout = root.querySelector('.mg-readout');
+    this.grid = { w: 0, h: 0, cw: 7.2, cols: 0, ox: 0, top: 0, rows: 0 };
+    this.scene = null;
+    this.state = {};
+    this.t0 = performance.now();
+    this.printed = Infinity;
+    this.chunk = 2;
+    this.pointer = null;
+    this.visible = false;
+    this.entered = false;
+    this.lastRefresh = 0;
+    this.ro = new ResizeObserver(() => this.measure());
+    this.ro.observe(this.canvas);
+    this.io = new IntersectionObserver(([entry]) => {
+      this.visible = entry.isIntersecting;
+      if (this.visible && !this.entered && this.scene) { this.entered = true; this.print(); }
+      if (this.visible) this.wake();
+    }, { threshold: 0.2 });
+    this.io.observe(root);
+    root.addEventListener('pointermove', (event) => {
+      const box = this.canvas.getBoundingClientRect();
+      this.pointer = { x: event.clientX - box.left, y: event.clientY - box.top };
+      this.scene?.pointer?.(this.state, this.pointer.x, this.pointer.y, this.grid);
+      this.wake();
+    });
+    root.addEventListener('pointerleave', () => {
+      this.pointer = null;
+      this.scene?.pointer?.(this.state, null, null, this.grid);
+      this.wake();
+    });
+  }
+  destroy() {
+    this.dead = true;
+    this.ro.disconnect();
+    this.io.disconnect();
+    cancelAnimationFrame(this.raf);
+    clearTimeout(this.timer);
+    clearTimeout(this.printTimer);
+  }
+  measure() {
+    const box = this.canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.canvas.width = Math.round(box.width * dpr);
+    this.canvas.height = Math.round(box.height * dpr);
+    const ctx = this.ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = FONT;
+    ctx.textBaseline = 'middle';
+    const cw = ctx.measureText('0').width;
+    const cols = Math.floor((box.width - 40) / cw);
+    const { top, bottom } = this.parts.plot();
+    const first = Math.ceil(top / LINE);
+    const last = Math.floor(bottom / LINE) - 1;
+    Object.assign(this.grid, { w: box.width, h: box.height, cw, cols, ox: (box.width - cols * cw) / 2, top: first, rows: Math.max(6, last - first + 1) });
+    if (this.scene) this.state = this.scene.init ? this.scene.init(this.grid) : {};
+    this.wake();
+  }
+  show(scene, { print = true } = {}) {
+    this.scene = scene;
+    this.state = scene.init ? scene.init(this.grid) : {};
+    this.t0 = performance.now();
+    this.fill();
+    if (print && this.visible) { this.entered = true; this.print(); }
+    this.wake();
+  }
+  fill() {
+    const s = this.scene, p = this.parts;
+    if (p.word) p.word.textContent = s.word;
+    if (p.meta) p.meta.innerHTML = s.meta.map((m) => `<span>${m}</span>`).join('');
+    if (p.legend) p.legend.innerHTML = s.legend.map(([keys, text, dim]) => `<span><b${dim ? ' class="mg-dim"' : ''}>${keys}</b>${text}</span>`).join('');
+    if (p.range) p.range.textContent = typeof s.range === 'function' ? s.range(this.state) : s.range;
+    if (p.label) p.label.textContent = s.label;
+    if (p.sub) p.sub.textContent = s.sub;
+    if (p.value) {
+      p.value.style.setProperty('--chars', String(s.value.length));
+      decodeTo(p.value, s.value);
+    }
+    // The plot starts under the answer block, whose size depends on the new value.
+    requestAnimationFrame(() => this.measure());
+  }
+  /** The opening: columns print left to right in 16 chunks, each new chunk flashing noise first. */
+  print() {
+    clearTimeout(this.printTimer);
+    if (reduce.matches) { this.printed = Infinity; return; }
+    this.chunk = Math.max(2, Math.ceil(this.grid.cols / 16));
+    this.printed = 0;
+    const advance = () => {
+      this.printed += this.chunk;
+      if (this.printed >= this.grid.cols + this.chunk) this.printed = Infinity;
+      else this.printTimer = setTimeout(advance, 45);
+      this.wake();
+    };
+    this.printTimer = setTimeout(advance, 45);
+  }
+  wake() {
+    if (this.dead) return;
+    clearTimeout(this.timer);
+    if (!this.raf) this.raf = requestAnimationFrame((now) => this.frame(now));
+  }
+  frame(now) {
+    this.raf = 0;
+    if (this.dead) return;
+    this.draw(now);
+    if (this.printed !== Infinity) { this.raf = requestAnimationFrame((n) => this.frame(n)); return; }
+    // About 11 frames a second, like Monoglyph's shimmer; a scene that follows the pointer asks for more.
+    if (!reduce.matches && this.visible) this.timer = setTimeout(() => this.wake(), this.scene?.fps ? 1000 / this.scene.fps : 90);
+  }
+  draw(now) {
+    const { ctx, grid } = this;
+    ctx.clearRect(0, 0, grid.w, grid.h);
+    if (!this.scene || !grid.cols) return;
+    const still = reduce.matches;
+    const slot = now / 1000;
+    const cells = new Map();
+    const put = (style, ch, c, r, pri = 1) => {
+      c = Math.round(c);
+      r = Math.round(r);
+      if (c < 0 || c >= grid.cols || r < 0 || r >= grid.rows || !ch || ch === ' ') return;
+      const key = r * grid.cols + c;
+      const prev = cells.get(key);
+      if (prev && prev.pri > pri) return;
+      cells.set(key, { style, ch, c, r, pri });
+    };
+    const jitter = (c, r) => (still ? 0 : (hash(c, r, Math.floor(slot * 0.8 + hash(c, r, 9) * 8)) - 0.5) * 0.1);
+    const level = (v) => clamp(Math.round(v * 9), 1, 9);
+    const hc = this.pointer ? Math.floor((this.pointer.x - grid.ox) / grid.cw) : -1;
+    const g = {
+      ...grid, now, still,
+      t: still ? (this.scene.stillT ?? 6) : (now - this.t0) / 1000,
+      hover: hc >= 0 && hc < grid.cols ? { c: hc, r: Math.floor(this.pointer.y / LINE) - grid.top } : null,
+      put,
+      ink(c, r, v, pri) { if (!(v > 0.03)) return; const l = level(v + jitter(c, r)); put(INK[l], RAMP[l], c, r, pri ?? l); },
+      glyph(ch, c, r, v, pri) { if (!(v > 0.03)) return; const l = level(v + jitter(c, r)); put(INK[l], ch, c, r, pri ?? l); },
+      text(s, c, r, style = ST.label, pri = 40) { for (let i = 0; i < s.length; i++) put(style, s[i], c + i, r, pri); },
+      bright(ch, c, r, pri = 60) { put(ST.bright, ch, c, r, pri); },
+    };
+    this.scene.draw(g, this.state);
+    // Columns the opening hasn't reached stay empty; the newest chunk flashes noise.
+    const layers = new Map();
+    for (const cell of cells.values()) {
+      let { style, ch } = cell;
+      if (this.printed !== Infinity) {
+        if (cell.c >= this.printed) continue;
+        if (cell.c >= this.printed - this.chunk) { style = ST.bright; ch = NOISE[(Math.random() * NOISE.length) | 0]; }
+      }
+      let list = layers.get(style);
+      if (!list) layers.set(style, (list = []));
+      list.push(ch, grid.ox + cell.c * grid.cw, (grid.top + cell.r) * LINE + LINE / 2);
+    }
+    for (const [style, list] of layers) {
+      ctx.fillStyle = style;
+      for (let i = 0; i < list.length; i += 3) ctx.fillText(list[i], list[i + 1], list[i + 2]);
+    }
+    this.place(this.printed === Infinity && this.scene.readout ? this.scene.readout(g, this.state) : null);
+    if (now - this.lastRefresh > 250) { this.lastRefresh = now; this.refresh(); }
+  }
+  /** The readout sits 12px right of its column, flips left near the edge, and stays above the drawing. */
+  place(note) {
+    const el = this.readout;
+    if (!note) { if (!el.hidden) { el.hidden = true; el.dataset.html = ''; } return; }
+    if (el.dataset.html !== note.html) { el.innerHTML = note.html; el.dataset.html = note.html; }
+    el.hidden = false;
+    const { cw, ox, w, top } = this.grid;
+    const x = ox + note.c * cw;
+    const left = x + cw + 12 + el.offsetWidth > w - 8 ? x - 12 - el.offsetWidth : x + cw + 12;
+    const y = Math.max(top * LINE, (top + note.r) * LINE - el.offsetHeight - 6);
+    el.style.transform = `translate(${Math.round(left)}px, ${Math.round(y)}px)`;
+  }
+  /** Live values: a countdown, Mars time, how far back the dot has gone. */
+  refresh() {
+    const s = this.scene, p = this.parts;
+    if (p.range && typeof s.range === 'function') p.range.textContent = s.range(this.state);
+    if (!s.status) return;
+    const next = s.status(this.state);
+    if (p.label && next.label && p.label.textContent !== next.label) p.label.textContent = next.label;
+    if (p.value && next.value && p.value.dataset.text !== next.value) decodeTo(p.value, next.value, { duration: 300 });
+  }
+}
+
+// ---- one drawing per project --------------------------------------------------------------------------------
+const KINDS = [['▓', 'reels'], ['▒', 'podcasts'], ['░', 'screenshots'], ['#', 'book pages'], [':', 'voice notes']];
+
+const SCENES = {
+  // Saves pile up day by day; every few seconds an old one lights up and comes back.
+  bargasht: {
+    word: 'bargasht',
+    label: 'Kinds of saves it files', value: '5', sub: 'reels, podcasts, screenshots, book pages and voice notes',
+    legend: [['▓', 'reels'], ['▒', 'podcasts'], ['░', 'screens'], ['#', 'pages'], [':', 'voice']],
+    range: 'two months, simulated',
+    init(grid) {
+      // Busy weeks and quiet ones: each day's pile follows a slow wave, so the archive reads as a skyline.
+      const cap = Math.max(3, grid.rows - 5);
+      const days = [];
+      for (let d = 0; d < 800; d++) {
+        const n = Math.round(cap * (0.12 + 0.62 * vnoise(d * 0.16, 1.7)) * (0.55 + 0.45 * hash(d, 1, 7)));
+        days.push(Array.from({ length: n }, (_, i) => Math.floor(hash(d, i, 11) * 5)));
+      }
+      return { days, note: null };
+    },
+    draw(g, s) {
+      const DAY = 1.4, CYCLE = 4.2;
+      const axis = g.rows - 2;
+      const first = g.still ? 0 : Math.floor(g.t / DAY);
+      const fresh = g.still ? 1 : (g.t % DAY) / DAY;
+      const cycle = Math.floor(g.t / CYCLE), phase = g.still ? 0.3 : (g.t % CYCLE) / CYCLE;
+      let pick = null;
+      const pc = Math.floor(hash(cycle, 2, 5) * Math.max(1, g.cols - 16));
+      const pickDay = s.days[first + pc];
+      if (pickDay && pickDay.length && phase < 0.78) pick = { c: pc, i: Math.floor(hash(cycle, 3, 5) * pickDay.length) };
+      for (let c = 0; c < g.cols; c++) {
+        const items = s.days[first + c] || [];
+        const today = c === g.cols - 1;
+        items.forEach((kind, i) => {
+          let r = axis - 1 - i;
+          if (today) r = Math.round(lerp(-1 - i, r, smooth(0, 0.6, fresh)));
+          if (pick && pick.c === c && pick.i === i) g.bright(KINDS[kind][0], c, r);
+          else g.glyph(KINDS[kind][0], c, r, 0.5);
+        });
+        g.put(ST.grid, '.', c, axis, 1);
+      }
+      for (let k = 10; k < g.cols - 4; k += 10) {
+        const c = g.cols - 1 - k;
+        g.put(ST.label, '+', c, axis, 41);
+        g.text(`${k}d`, c - 1, axis + 1);
+      }
+      g.text('today', g.cols - 5, axis + 1);
+      if (pick) {
+        const top = axis - 1 - pick.i;
+        for (let r = 0; r < top; r++) g.put(ST.scan, '|', pick.c, r, 0.5);
+        const kind = KINDS[s.days[first + pick.c][pick.i]][1].replace(/s$/, '');
+        s.note = { c: pick.c, r: 2, html: `<b>${kind}</b><span>saved ${g.cols - 1 - pick.c} days ago</span><span>back on your phone now</span>` };
+      } else s.note = null;
+    },
+    readout: (g, s) => s.note,
+  },
+
+  // The agent's run as swimlanes: one tool at a time, a budget that runs down, and a lane that stays empty.
+  applybot: {
+    word: 'applybot',
+    label: 'Applications it submits for you', value: '0', sub: 'It interviews, searches, reads the admissions pages and writes. You press send.',
+    legend: [['%#', 'a tool at work'], ['//', 'never', true]],
+    range: 'one run, on a budget',
+    stillT: 0,
+    init(grid) {
+      const lanes = ['interview', 'search', 'read', 'write', 'submit'];
+      const x0 = 11, steps = Math.max(12, grid.cols - x0);
+      const plan = [];
+      const run = (lane, share) => { for (let i = 0, n = Math.max(1, Math.round(share * steps)); i < n; i++) plan.push(lane); };
+      run(0, 0.14);
+      for (let k = 0; k < 5; k++) { run(1, 0.05); run(2, 0.065); }
+      run(3, 0.2);
+      while (plan.length < steps) plan.push(-1);
+      plan.length = steps;
+      return { lanes, x0, steps, plan };
+    },
+    draw(g, s) {
+      const STEP = 0.08, HOLD = 3;
+      const head = g.still ? Math.round(s.steps * 0.86) : Math.min(s.steps, Math.floor((g.t % (s.steps * STEP + HOLD)) / STEP));
+      // Five lanes share the plot above the budget row, each a row shorter than its stride.
+      const stride = (g.rows - 2) / 5, laneH = Math.max(1, Math.round(stride) - 1);
+      s.lanes.forEach((name, lane) => {
+        const top = Math.round(lane * stride);
+        g.text(name, 0, top + Math.floor((laneH - 1) / 2), lane === 4 ? ST.loss : ST.label);
+        for (let x = 0; x < s.steps; x++) {
+          for (let r = top; r < top + laneH; r++) {
+            if (lane === 4) { g.put(ST.loss, '/', s.x0 + x, r, 1); continue; }
+            if (x >= head || s.plan[x] !== lane) continue;
+            if (x === head - 1) g.bright(RAMP[9], s.x0 + x, r);
+            else g.ink(s.x0 + x, r, 0.38 + 0.45 * hash(x, r, 21));
+          }
+        }
+      });
+      const left = Math.round(18 * (1 - (0.7 * head) / s.steps));
+      g.text('budget', 0, g.rows - 1);
+      for (let i = 0; i < 18; i++) g.put(i < left ? ST.bright : ST.grid, i < left ? '█' : '░', s.x0 + i, g.rows - 1, 45);
+    },
+  },
+
+  // A shaded planet that runs on Mars Coordinated Time, with the hour ring around it. It follows the pointer late.
+  apsis: {
+    word: 'apsis',
+    label: 'A Martian day runs', value: '+37 min', sub: 'longer than ours, and the clock keeps that world’s time',
+    legend: [['@%', 'day side'], ['.', 'night side', true], ['+', 'the hour on mars']],
+    range: () => `mars time ${marsTime()}`,
+    fps: 30,
+    init: () => ({ ox: 0, oy: 0, vx: 0, vy: 0, tx: 0, ty: 0, last: 0 }),
+    pointer(s, x, y, grid) {
+      s.tx = x == null ? 0 : (x - grid.w / 2) * 0.06;
+      s.ty = y == null ? 0 : (y - grid.h / 2) * 0.06;
+    },
+    draw(g, s) {
+      const dt = s.last ? Math.min(0.08, (g.now - s.last) / 1000) : 0.016;
+      s.last = g.now;
+      s.vx += (12 * (s.tx - s.ox) - 4.2 * s.vx) * dt;
+      s.vy += (12 * (s.ty - s.oy) - 4.2 * s.vy) * dt;
+      s.ox += s.vx * dt;
+      s.oy += s.vy * dt;
+      const W = g.cols * g.cw, H = g.rows * LINE;
+      const R = Math.min(W * 0.27, H * 0.33);
+      const cx = W / 2 + s.ox, cy = H * 0.58 + s.oy;
+      const turn = (Date.now() / 1000) * ((2 * Math.PI) / 88642) + g.t * 0.05;
+      const sun = norm3(-0.6, -0.45, 0.66);
+      for (let r = Math.floor((cy - R) / LINE) - 1; r <= Math.ceil((cy + R) / LINE); r++) {
+        for (let c = Math.floor((cx - R) / g.cw) - 1; c <= Math.ceil((cx + R) / g.cw); c++) {
+          const x = (c + 0.5) * g.cw - cx, y = (r + 0.5) * LINE - cy;
+          const d2 = (x * x + y * y) / (R * R);
+          if (d2 > 1) continue;
+          const nx = x / R, ny = y / R, nz = Math.sqrt(1 - d2);
+          const lon = Math.atan2(nx, nz) + turn, lat = Math.asin(-ny);
+          const ground = 0.6 * vnoise(lon * 2.2 + 20, lat * 2.8 + 3) + 0.4 * vnoise(lon * 5.5, lat * 6 + 9);
+          const light = nx * sun[0] + ny * sun[1] + nz * sun[2];
+          g.ink(c, r, light > 0.04 ? 0.14 + 0.86 * light * (0.5 + 0.5 * ground) : 0.1);
+        }
+      }
+      const ring = R * 1.3;
+      const at = (hours) => {
+        const a = (hours / 24) * Math.PI * 2 - Math.PI / 2;
+        return [(cx + Math.cos(a) * ring) / g.cw - 0.5, (cy + Math.sin(a) * ring) / LINE - 0.5];
+      };
+      for (let h = 0; h < 24; h++) g.put(ST.grid, '·', ...at(h), 2);
+      g.bright('+', ...at(marsHours()));
+      const time = marsTime();
+      g.text(time, cx / g.cw - time.length / 2, at(0)[1] - 2, ST.bright);
+    },
+  },
+
+  // The tree of life converging downwards; your line is lit, and a dot travels it back to the first ancestor.
+  descent: {
+    word: 'the descent',
+    label: 'Your scrollbar spans', value: '3.8B years', sub: 'from one glowing dot to the last universal common ancestor',
+    legend: [['@', 'you'], ['#', 'your line'], ['/|\\', 'lines that merge into it', true]],
+    range: (s) => s.ago || 'now',
+    init(grid) {
+      const L = grid.cols >= 72 ? 6 : 5;
+      const tips = 2 ** L, margin = 2, span = grid.cols - margin * 2 - 1;
+      const levels = [];
+      levels[L] = Array.from({ length: tips }, (_, i) => margin + ((i + 0.5) * span) / tips);
+      for (let k = L - 1; k >= 0; k--) levels[k] = Array.from({ length: 2 ** k }, (_, i) => (levels[k + 1][2 * i] + levels[k + 1][2 * i + 1]) / 2);
+      // Rows go where the branches travel furthest: merges near the root get room to bend, the tips stay close.
+      const top = 1, bottom = grid.rows - 3;
+      const reach = Array.from({ length: L + 1 }, (_, k) => (k ? ((span / 2 ** (k + 1)) * grid.cw) / LINE : 0) ** 0.75);
+      const total = reach.reduce((a, b) => a + b, 0);
+      const rows = [];
+      rows[L] = top;
+      for (let k = L; k >= 1; k--) rows[k - 1] = rows[k] + ((bottom - top) * reach[k]) / total;
+      const rowOf = (k) => rows[k];
+      const path = [];
+      for (let k = L, i = Math.floor(tips * 0.62); k >= 0; k--, i >>= 1) path[k] = i;
+      return { L, levels, rowOf, path, ago: '' };
+    },
+    draw(g, s) {
+      const { L, levels, rowOf, path } = s;
+      const TRIP = 10, HOLD = 2;
+      const prog = g.still ? 0.55 : Math.min(1, (g.t % (TRIP + HOLD)) / TRIP);
+      const dotRow = lerp(rowOf(L), rowOf(0), prog);
+      for (let k = L; k >= 1; k--) {
+        const r0 = rowOf(k), r1 = rowOf(k - 1);
+        levels[k].forEach((x, i) => {
+          const parent = i >> 1;
+          let v = 0.32, pri = 2;
+          if (path[k] === i) { v = r1 <= dotRow ? 1 : 0.62; pri = 8; }
+          else if (path[k - 1] === parent && dotRow >= r1) { v = 0.4 + 0.6 * Math.exp(-(dotRow - r1) / 2.5); pri = 5; }
+          stroke(g, x, r0, levels[k - 1][parent], r1, v, pri);
+        });
+      }
+      let k = L;
+      while (k > 0 && dotRow > rowOf(k - 1)) k--;
+      const dotCol = k === 0 ? levels[0][0] : lerp(levels[k][path[k]], levels[k - 1][path[k - 1]], (dotRow - rowOf(k)) / (rowOf(k - 1) - rowOf(k)));
+      g.bright('@', dotCol, dotRow, 90);
+      levels[L].forEach((x, i) => g.glyph('.', x, rowOf(L) - 1, i === path[L] ? 1 : 0.5, 3));
+      g.text('now', 0, 0);
+      const back = '3.8 billion years ago';
+      g.text(back, levels[0][0] - back.length / 2, g.rows - 1);
+      s.ago = prog === 0 ? 'now' : `${(prog * 3.8).toFixed(2)}b years ago`;
+    },
+  },
+
+  // Six years as a river: IranSpoti's meander and oxbow, Sibkade's main stem, HelpFinity drying, Barayand braiding.
+  delta: {
+    word: 'delta',
+    label: 'Channels in the river', value: '4', sub: 'IranSpoti, Sibkade, HelpFinity and Barayand, 2019 to today',
+    legend: [['%#', 'a project, running'], ['.', 'dried up', true]],
+    range: '2019 – 2026',
+    draw(g, s) {
+      const axis = g.rows - 2, H = axis;
+      const Y0 = 2019, Y1 = 2027.5, SEA = 2026.86;
+      const yearAt = (c) => Y0 + (c / (g.cols - 1)) * (Y1 - Y0);
+      const colOf = (y) => ((y - Y0) / (Y1 - Y0)) * (g.cols - 1);
+      const mid = H * 0.52;
+      const yS = (t) => mid + H * 0.09 * Math.sin((t - 2020) * 1.9 + 0.4);
+      const yI = (t) => mid + H * 0.1 * Math.sin((t - 2019) * Math.PI * 3.2);
+      const label = (s, c, r) => g.text(s, clamp(Math.round(c), 0, g.cols - s.length), clamp(Math.round(r), 0, axis - 2));
+      const yH = (t) => yS(t) + H * 0.3 * smooth(2023.95, 2024.9, t) + H * 0.04 * Math.sin((t - 2024) * 5);
+      const hoverC = g.hover && g.hover.c >= 0 ? g.hover.c : -1;
+      const flow = (c, r) => (g.still ? 1 : 0.82 + 0.18 * Math.sin(c * 0.6 - r * 0.15 - g.t * 2.4));
+      const water = (c, y, w, v) => {
+        for (let r = Math.floor(y - w - 1); r <= Math.ceil(y + w + 1); r++) {
+          const d = Math.abs(r + 0.5 - y);
+          if (d > w + 0.5) continue;
+          const ink = v * (0.35 + 0.65 * (1 - d / (w + 0.5))) * flow(c, r);
+          if (c === hoverC) g.bright(RAMP[clamp(Math.round(ink * 9), 1, 9)], c, r, 30);
+          else g.ink(c, r, ink);
+        }
+      };
+      for (let c = 0; c < g.cols; c++) {
+        const t = yearAt(c);
+        let sea = false;
+        for (let r = 0; r < axis; r++) {
+          if (t >= SEA + 0.05 * Math.sin(r * 0.9)) {
+            sea = true;
+            g.ink(c, r, 0.46 + 0.2 * Math.sin(r * 0.8 + c * 0.5 - (g.still ? 0 : g.t * 1.4)));
+          }
+        }
+        if (sea) continue;
+        if (t < 2019.47) water(c, yI(t), 0.6, 0.9);
+        else if (t < 2020) water(c, lerp(yI(2019.47), yS(2020), smooth(2019.47, 2020, t)), 0.7, 0.9);
+        if (t >= 2020 && t < 2026.42) water(c, yS(t), Math.min(2, 0.8 + (t - 2020) * 0.22), 1);
+        if (t >= 2026.42) for (const side of [-1, 0, 1]) water(c, yS(t) + side * H * 0.13 * smooth(2026.42, 2026.75, t), side ? 0.5 : 0.8, 0.95);
+        if (t >= 2023.95 && t < 2025.9) {
+          const w = 0.9 * (1 - smooth(2024.2, 2025.55, t));
+          if (w > 0.2) water(c, yH(t), w, 0.85);
+          else g.put(ST.grid, '.', c, Math.round(yH(t) - 0.5), 2);
+        }
+        g.put(ST.grid, '.', c, axis, 1);
+      }
+      // the oxbow lake IranSpoti left behind: still water, so no flow
+      const ox = colOf(2019.66) * g.cw, oy = (mid - H * 0.28) * LINE;
+      const rx = (colOf(2019.84) - colOf(2019.48)) * 0.5 * g.cw, ry = Math.max(1.2, H * 0.1) * LINE;
+      for (let r = Math.floor((oy - ry) / LINE) - 1; r <= Math.ceil((oy + ry) / LINE); r++) {
+        for (let c = Math.floor((ox - rx) / g.cw) - 1; c <= Math.ceil((ox + rx) / g.cw); c++) {
+          const e = Math.hypot(((c + 0.5) * g.cw - ox) / rx, ((r + 0.5) * LINE - oy) / ry);
+          if (Math.abs(e - 1) < 0.26) g.ink(c, r, 0.6);
+        }
+      }
+      label('iranspoti', colOf(2019.66) - 4, (oy - ry) / LINE - 1.6);
+      label('sibkade', colOf(2021.3), yS(2021.3) - 3.6);
+      label('helpfinity', colOf(2024.45), yH(2024.9) + 2.2);
+      label('barayand', colOf(2026.84) - 8, yS(2026.6) - H * 0.13 - 2.6);
+      const every = g.cols / 8 < 6 ? 2 : 1;
+      for (let y = 2019; y <= 2026; y += every) {
+        g.put(ST.label, '+', colOf(y), axis, 41);
+        g.text(String(y), colOf(y), axis + 1);
+      }
+      if (hoverC >= 0) {
+        for (let r = 0; r < axis; r++) g.put(ST.scan, '|', hoverC, r, 0.5);
+        const t = yearAt(hoverC);
+        const running = [];
+        if (t >= SEA) running.push('the sea');
+        else {
+          if (t < 2020) running.push('iranspoti');
+          if (t >= 2020) running.push('sibkade');
+          if (t >= 2023.95 && t < 2025.55) running.push('helpfinity');
+          if (t >= 2025.55 && t < 2025.9) running.push('helpfinity, dry');
+          if (t >= 2026.42) running.push('barayand');
+        }
+        const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Math.min(11, Math.floor((t % 1) * 12))];
+        s.note = { c: hoverC, r: 1, html: `<b>${month} ${Math.floor(t)}</b><span>${running.join(', ')}</span>` };
+      } else s.note = null;
+    },
+    readout: (g, s) => s.note,
+  },
+
+  // A one-minute push up a mountain with no summit, the roll back down, then the walk down after it.
+  sisyphus: {
+    word: 'sisyphus',
+    label: 'Time left on this push', value: '1:00', sub: 'A one-minute push here. When time runs out, the boulder rolls back down.',
+    legend: [['@', 'the boulder'], ['%#', 'a mountain with no summit']],
+    range: 'push, roll, walk down',
+    stillT: 26,
+    init: () => ({ phase: 'push', left: 60 }),
+    status: (s) => s.phase === 'push' ? { label: 'Time left on this push', value: clock(s.left) }
+      : s.phase === 'roll' ? { label: 'Time is up', value: '0:00' }
+      : { label: 'Your break: the walk down', value: clock(s.left) },
+    draw(g, s) {
+      const PUSH = 60, ROLL = 2.4, BREAK = 15, CYCLE = PUSH + ROLL + BREAK;
+      const t = g.still ? 26 : g.t % CYCLE;
+      const base = g.rows - 1;
+      const slope = (c) => base - (c / (g.cols - 1)) * base * 1.3 + 0.5 * Math.sin(c * 0.31) + 0.35 * Math.sin(c * 0.13 + 1.3);
+      let p;
+      if (t < PUSH) { s.phase = 'push'; p = 0.1 + 0.58 * (t / PUSH); s.left = PUSH - t; }
+      else if (t < PUSH + ROLL) { s.phase = 'roll'; const u = (t - PUSH) / ROLL; p = 0.68 - 0.58 * u * u; s.left = 0; }
+      else { s.phase = 'break'; p = 0.1; s.left = CYCLE - t; }
+      const R = Math.min(LINE * 2.3, g.cols * g.cw * 0.065);
+      const bc = p * (g.cols - 1);
+      const cx = (bc + 0.5) * g.cw, cy = slope(bc) * LINE - R * 0.95;
+      // The mountain, with a one-cell gap around the boulder so it reads as its own thing.
+      for (let c = 0; c < g.cols; c++) {
+        const top = slope(c);
+        for (let r = Math.max(0, Math.floor(top)); r <= base; r++) {
+          const cover = Math.min(1, r + 1 - top);
+          if (cover <= 0) continue;
+          if (Math.hypot((c + 0.5) * g.cw - cx, (r + 0.5) * LINE - cy) < R + g.cw * 1.2) continue;
+          g.ink(c, r, cover < 1 ? 0.15 + 0.85 * cover : 0.42 + 0.58 * Math.exp(-(r - top) / 2.2), 3);
+        }
+      }
+      const spin = -(p * g.cols * g.cw) / R;
+      const sun = norm3(-0.55, -0.6, 0.58);
+      for (let r = Math.floor((cy - R) / LINE) - 1; r <= Math.ceil((cy + R) / LINE); r++) {
+        for (let c = Math.floor((cx - R) / g.cw) - 1; c <= Math.ceil((cx + R) / g.cw); c++) {
+          const x = (c + 0.5) * g.cw - cx, y = (r + 0.5) * LINE - cy;
+          const d2 = (x * x + y * y) / (R * R);
+          if (d2 > 1) continue;
+          const nx = x / R, ny = y / R, nz = Math.sqrt(1 - d2);
+          const light = Math.max(0, nx * sun[0] + ny * sun[1] + nz * sun[2]);
+          const band = 0.5 + 0.5 * Math.sin((nx * Math.cos(spin) + ny * Math.sin(spin)) * 6);
+          g.ink(c, r, 0.4 + 0.6 * light * (0.78 + 0.22 * band), 20);
+        }
+      }
+      const edge = Math.round((cx - R) / g.cw);
+      if (s.phase === 'push') {
+        const fc = edge - 2, fr = Math.floor(slope(fc));
+        g.bright('o', fc + 1, fr - 3); g.bright('/', fc, fr - 2); g.bright('-', fc + 1, fr - 2);
+        g.bright('/', fc - 1, fr - 1); g.bright('\\', fc, fr - 1);
+      } else if (s.phase === 'break') {
+        const u = 1 - s.left / BREAK;
+        const fc = Math.round(lerp(0.68 * (g.cols - 1) - 3, edge - 3, u)), fr = Math.floor(slope(fc));
+        const stride = Math.floor(g.t * 2.5) % 2;
+        g.bright('o', fc, fr - 3); g.bright('|', fc, fr - 2);
+        g.bright(stride ? '/' : '|', fc - 1 + stride, fr - 1); g.bright('\\', fc + 1 - stride, fr - 1);
+      }
+    },
+  },
+
+  // The real v1.1 leaderboard. Each run's bar fades into fog where its 95% interval runs.
+  eval: {
+    word: 'persian llm eval',
+    label: 'Top combined score', value: '0.945', sub: '17 runs on public_eval and hard. Runs inside each other’s haze are a statistical tie.',
+    legend: [['@%', 'combined score'], ['.:', '95% interval', true]],
+    range: 'v1.1 leaderboard',
+    stillT: 3,
+    init: () => ({ hi: -1 }),
+    draw(g, s) {
+      const LO = 0.8, HI = 0.98, SIGMA = 0.0108;
+      const area = g.cols - 7, base = g.rows - 2, H = base;
+      const per = area / RUNS.length;
+      const rowOf = (v) => Math.round(H - 1 - (((v - LO) / (HI - LO)) * H - 0.5));
+      s.hi = g.hover && g.hover.c < area ? Math.floor(g.hover.c / per) : -1;
+      for (const v of [0.85, 0.9, 0.95]) {
+        for (let c = 0; c < area; c += 2) g.put(ST.grid, '·', c, rowOf(v), 0.5);
+        g.text(v.toFixed(2), area + 1, rowOf(v));
+      }
+      RUNS.forEach(([, , , score], i) => {
+        const c0 = Math.round(i * per), c1 = Math.max(c0 + 1, Math.round((i + 1) * per) - 1);
+        const lit = i === s.hi;
+        for (let c = c0; c < c1; c++) {
+          for (let k = 0; k < H; k++) {
+            const v = LO + ((k + 0.5) / H) * (HI - LO);
+            let ink;
+            if (v <= score) ink = 0.42 + 0.58 * Math.exp(-(((score - v) / (HI - LO)) * H) / 2.2);
+            else {
+              const share = 1 - phi((v - score) / SIGMA);
+              if (share < 0.03) continue;
+              ink = 0.1 + 0.9 * share;
+            }
+            if (lit) g.bright(RAMP[clamp(Math.round(ink * 9), 1, 9)], c, H - 1 - k, 30);
+            else g.ink(c, H - 1 - k, ink, 10);
+          }
+        }
+        if (lit) for (let r = 0; r < rowOf(score + 0.035); r++) g.put(ST.scan, '|', Math.round((c0 + c1 - 1) / 2), r, 0.5);
+      });
+      for (let c = 0; c < area; c++) g.put(ST.grid, '.', c, base, 1);
+      for (const rank of [1, 5, 10, 15]) {
+        const c = Math.round((rank - 0.5) * per);
+        g.put(ST.label, '+', c, base, 41);
+        g.text(String(rank), c, base + 1);
+      }
+      g.text('rank', area + 1, base + 1);
+    },
+    readout(g, s) {
+      if (s.hi < 0) return null;
+      const [name, pub, hard, score] = RUNS[s.hi];
+      const per = (g.cols - 7) / RUNS.length;
+      return { c: Math.round((s.hi + 0.5) * per), r: 1, html: `<b>${score.toFixed(4)}</b><span>${name}</span><span>rank ${s.hi + 1} of ${RUNS.length}</span><span>public_eval ${pub.toFixed(3)}, hard ${hard.toFixed(3)}</span>` };
+    },
+  },
+
+  // Three plugins, each drawn as its own count: five inputs into one workspace, ten stages and a wall, nine screens.
+  plugins: {
+    word: 'claude code plugins',
+    label: 'Plugins, learned by building', value: '3', sub: 'Venture, Idea Validator and Liquid Glass, all open source',
+    legend: [['::', 'inputs'], ['▓', 'one workspace'], ['//', 'the line it won’t cross', true]],
+    range: 'open source',
+    draw(g, s) {
+      const third = g.cols / 3, base = g.rows - 3;
+      const caption = (x, a, b) => { g.text(a, x - a.length / 2, base + 1, ST.bright, 45); g.text(b, x - b.length / 2, base + 2); };
+      // venture: market, competitors, customers, unit economics and go-to-market feed one workspace
+      const vx = third * 0.5, ws = Math.round(base * 0.62);
+      for (let i = 0; i < 5; i++) {
+        const x0 = third * 0.1 + (i * third * 0.8) / 4, x1 = vx + (i - 2) * 1.6;
+        stroke(g, x0, 0, x1, ws - 1, 0.42, 4, ':');
+        if (!g.still) { const u = (g.t * 0.5 + i * 0.23) % 1; g.bright('*', lerp(x0, x1, u), lerp(0, ws - 1, u)); }
+      }
+      for (let r = ws; r < Math.min(base, ws + 3); r++) for (let c = Math.round(vx - 4); c <= Math.round(vx + 4); c++) g.glyph('▓', c, r, 0.72, 6);
+      caption(vx, 'venture', '5 into 1');
+      // idea validator: ten stages light up one by one, and the wall after them stays shut
+      const ix = third * 1.5, x0 = Math.round(ix - 9), r0 = Math.round(base * 0.32);
+      const lit = g.still ? 10 : Math.floor(g.t / 0.4) % 14;
+      for (let i = 0; i < 10; i++) {
+        const c = x0 + (i % 5) * 3, r = r0 + Math.floor(i / 5) * 3;
+        if (i < lit) g.bright('■', c, r); else g.glyph('■', c, r, 0.3);
+      }
+      for (let r = r0 - 1; r <= r0 + 4; r++) for (let c = x0 + 15; c < x0 + 18; c++) g.put(ST.loss, '/', c, r, 2);
+      caption(ix, 'idea validator', '10 stages, 1 wall');
+      // liquid glass: nine screens, with light sweeping across the glass
+      const fw = 5, fh = g.rows >= 19 ? 4 : 3;
+      const w = fw * 3 + 2, h = fh * 3 + 2;
+      const gx = Math.round(third * 2.5 - w / 2), gy = Math.max(0, Math.round((base - h) / 2));
+      const sweep = g.still ? 0.4 : ((g.t * 0.22) % 1.6) - 0.3;
+      for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+        const fx = gx + i * (fw + 1), fy = gy + j * (fh + 1);
+        g.put(ST.label, '╭', fx, fy, 5); g.put(ST.label, '╮', fx + fw - 1, fy, 5);
+        g.put(ST.label, '╰', fx, fy + fh - 1, 5); g.put(ST.label, '╯', fx + fw - 1, fy + fh - 1, 5);
+        for (let c = fx + 1; c < fx + fw - 1; c++) { g.put(ST.label, '─', c, fy, 5); g.put(ST.label, '─', c, fy + fh - 1, 5); }
+        for (let r = fy + 1; r < fy + fh - 1; r++) {
+          g.put(ST.label, '│', fx, r, 5); g.put(ST.label, '│', fx + fw - 1, r, 5);
+          for (let c = fx + 1; c < fx + fw - 1; c++) {
+            const u = ((c - gx) / w + (r - gy) / h) / 2;
+            g.ink(c, r, 0.18 + 0.8 * Math.exp(-(((u - sweep) / 0.09) ** 2)), 6);
+          }
+        }
+      }
+      caption(third * 2.5, 'liquid glass', '9 screens');
+    },
+  },
+};
+
+// ---- the two layouts --------------------------------------------------------------------------------------
+const section = document.getElementById('playground');
+let stages = [];
+let cleanups = [];
+
+const pad = (i) => String(i + 1).padStart(2, '0');
+const meta = (it) => [it.kind, String(it.year)].filter(Boolean);
+const titleHtml = (it) => it.url ? `<a href="${it.url}" target="_blank" rel="noopener">${it.title}<span aria-hidden="true"> ↗</span></a>` : it.title;
+const metaHtml = (it, cls) => [it.year, it.kind].filter(Boolean).join(' · ')
+  + (it.repo ? ` · <a class="${cls}" href="${it.repo}" target="_blank" rel="noopener">Source<span aria-hidden="true"> ↗</span></a>` : '');
+const sceneFor = (it) => ({ ...SCENES[it.key], meta: meta(it) });
+const stageHtml = (answer) => `
+  <canvas aria-hidden="true"></canvas>
+  <div class="mg-hud mg-hud-top"><span class="mg-wordmark" data-word></span><span class="mg-hud-meta" data-meta></span></div>
+  ${answer ? '<div class="mg-answer" aria-hidden="true"><p class="mg-answer-label" data-label></p><p class="mg-answer-value" data-value></p><p class="mg-answer-sub" data-sub></p></div>' : ''}
+  <div class="mg-readout" aria-hidden="true" hidden></div>
+  <div class="mg-hud mg-hud-bottom" aria-hidden="true"><span class="mg-legend" data-legend></span><span data-range></span></div>`;
+
+function partsOf(root, extra = {}) {
+  const q = (sel) => root.querySelector(sel);
+  const answer = q('.mg-answer'), top = q('.mg-hud-top'), bottom = q('.mg-hud-bottom');
+  return {
+    word: q('[data-word]'), meta: q('[data-meta]'), legend: q('[data-legend]'), range: q('[data-range]'),
+    label: q('[data-label]'), value: q('[data-value]'), sub: q('[data-sub]'),
+    plot: () => ({
+      top: answer ? answer.offsetTop + answer.offsetHeight + 20 : top.offsetHeight + 4,
+      bottom: root.clientHeight - bottom.offsetHeight - 2,
+    }),
+    ...extra,
+  };
+}
+
+function layoutOne() {
+  section.className = 'sec';
+  section.innerHTML = `
+    <div class="wrap">
+      <h2 class="sec-title" id="playground-title">Playground</h2>
+      <p class="sec-sub">${INTRO}</p>
+      <div class="pg1">
+        <div class="pg1-stage mg-stage">${stageHtml(true)}</div>
+        <ol class="pg1-list">
+          ${ITEMS.map((it, i) => `
+            <li class="pg1-item" data-i="${i}">
+              <div class="pg1-head"><span class="pg-idx">${pad(i)}</span><h3 class="pitem-title">${titleHtml(it)}</h3><span class="pitem-meta">${metaHtml(it, 'pitem-src')}</span></div>
+              <div class="pitem-body"><p>${it.body}</p></div>
+            </li>`).join('')}
+        </ol>
+      </div>
+    </div>`;
+  const root = section.querySelector('.pg1-stage');
+  const stage = new Stage(root, partsOf(root));
+  stages.push(stage);
+  const items = [...section.querySelectorAll('.pg1-item')];
+  let on = -1;
+  const pick = (i, print = true) => {
+    if (i === on) return;
+    on = i;
+    items.forEach((el, j) => el.classList.toggle('is-on', j === i));
+    stage.show(sceneFor(ITEMS[i]), { print });
+  };
+  pick(0, false);
+  // The item crossing a thin band of the viewport drives the stage; on phones the band sits under the stage.
+  const band = matchMedia('(max-width: 900px)').matches ? '-72% 0px -16% 0px' : '-45% 0px -45% 0px';
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) pick(Number(e.target.dataset.i));
+  }, { rootMargin: band });
+  items.forEach((el) => {
+    io.observe(el);
+    el.addEventListener('pointerenter', () => pick(Number(el.dataset.i)));
+    el.addEventListener('focusin', () => pick(Number(el.dataset.i)));
+  });
+  cleanups.push(() => io.disconnect());
+}
+
+function layoutTwo() {
+  section.className = 'sec pg2';
+  section.innerHTML = `
+    <div class="wrap">
+      <div class="pg2-hud" aria-hidden="true"><span><span>${ITEMS.length} projects</span><span>weekends</span></span><span>all finished</span></div>
+      <h2 class="pg2-title" id="playground-title">playground</h2>
+      <p class="pg2-sub">${INTRO}</p>
+      <ol class="pg2-list">
+        ${ITEMS.map((it, i) => {
+          const sc = SCENES[it.key];
+          return `
+          <li class="pg2-item">
+            <div class="pg2-stage mg-stage" data-i="${i}">${stageHtml(false)}</div>
+            <div class="pg2-text">
+              <span class="pg-idx">${pad(i)}</span>
+              <h3 class="pg2-name">${titleHtml(it)}</h3>
+              <span class="pg2-meta">${metaHtml(it, '')}</span>
+              <div class="pg2-body"><p>${it.body}</p></div>
+              <div class="pg2-stat" aria-hidden="true"><span class="pg2-stat-label" data-label>${sc.label}</span><span class="pg2-stat-value" data-value>${sc.value}</span></div>
+            </div>
+          </li>`;
+        }).join('')}
+      </ol>
+    </div>`;
+  section.querySelectorAll('.pg2-stage').forEach((root) => {
+    const li = root.closest('.pg2-item');
+    const parts = partsOf(root, { label: li.querySelector('[data-label]'), value: li.querySelector('[data-value]') });
+    const stage = new Stage(root, parts);
+    stage.show(sceneFor(ITEMS[Number(root.dataset.i)]), { print: false });
+    stages.push(stage);
+  });
+}
+
+function mount(layout) {
+  stages.forEach((s) => s.destroy());
+  cleanups.forEach((f) => f());
+  stages = [];
+  cleanups = [];
+  if (layout === '2') layoutTwo(); else layoutOne();
+  document.querySelectorAll('[data-layout]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.layout === layout)));
+  try { localStorage.setItem('pg-proto-layout', layout); } catch {}
+}
+
+document.querySelectorAll('[data-layout]').forEach((b) => b.addEventListener('click', () => mount(b.dataset.layout)));
+const themeButton = document.querySelector('[data-theme-toggle]');
+themeButton.addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  themeButton.setAttribute('aria-pressed', String(dark));
+});
+
+const params = new URLSearchParams(location.search);
+if (params.get('theme') === 'dark') { document.documentElement.dataset.theme = 'dark'; themeButton.setAttribute('aria-pressed', 'true'); }
+let saved = null;
+try { saved = localStorage.getItem('pg-proto-layout'); } catch {}
+const start = params.get('layout') || saved || '1';
+// The canvas measures glyphs, so wait for Geist Mono (and the pixel face for the answer) before drawing.
+Promise.race([
+  Promise.all([document.fonts.load('400 12px "Geist Mono"'), document.fonts.load('400 40px "Geist Pixel"')]),
+  new Promise((resolve) => setTimeout(resolve, 2500)),
+]).then(() => mount(start));
+})();
+</script>
+</body>
+</html>
