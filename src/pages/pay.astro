@@ -1,0 +1,114 @@
+---
+// The page Parsa sends to clients: how to pay him. Its words and numbers live in content/site/pay.md, checked at
+// build time (src/lib/payment.ts). It is noindex, left out of the sitemap, and not linked from anywhere on the site.
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageCtx from '../components/PageCtx.astro';
+import { payCtx } from '../lib/page-ctx';
+import { groupIban } from '../lib/payment';
+
+const entry = await getEntry('pay', 'pay');
+if (!entry) throw new Error('content/site/pay.md is missing');
+const { title, intro, methods, reference, contact } = entry.data;
+type Field = (typeof methods)[number]['fields'][number];
+
+/** What a reader sees: an IBAN in groups of four. The copy buttons always copy the raw value. */
+const shown = (f: Field) => (f.kind === 'iban' ? groupIban(f.value) : f.value);
+const mono = (f: Field) => f.kind === 'iban' || f.kind === 'bic' || f.kind === 'btc';
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+---
+<Base title={`${title} · Parsa Kharazmian`} description="How to pay Parsa Kharazmian: bank transfer in euros (SEPA), PayPal or bitcoin." noindex>
+  <article class="pay">
+    <a class="pay-home" href="/"><span aria-hidden="true">← </span>Home</a>
+    <h1 class="pay-title" data-island-title>{title}.</h1>
+    <p class="pay-intro" data-after-title style="--i:0">{intro}</p>
+    <div class="pay-methods" data-after-title style="--i:1">
+      {methods.map((m) => (
+        <section class="pay-method" data-method aria-labelledby={`pay-${slug(m.name)}`}>
+          <h2 id={`pay-${slug(m.name)}`}>{m.name}</h2>
+          <p class="pay-note">{m.note}</p>
+          <dl class="pay-fields">
+            {m.fields.map((f) => (
+              <div class="pay-field" data-field={f.label}>
+                <dt>{f.label}</dt>
+                <dd>
+                  <span class:list={['pay-value', { mono: mono(f) }]}>{shown(f)}</span>
+                  <span class="pay-act">
+                    <button type="button" class="pay-copy" data-copy-value={f.value}>Copy<span class="visually-hidden"> {f.label}</span></button>
+                    <span class="pay-copied" role="status"></span>
+                  </span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {m.fields.length > 1 && (
+            <p class="pay-all">
+              <button type="button" class="pay-copy" data-copy-value={m.fields.map((f) => `${f.label}: ${f.value}`).join('\n')}>
+                Copy all<span class="visually-hidden"> {m.name.toLowerCase()} details</span>
+              </button>
+              <span class="pay-copied" role="status"></span>
+            </p>
+          )}
+        </section>
+      ))}
+    </div>
+    <p class="pay-foot" data-after-title style="--i:2">
+      {reference} {contact.text} <a href={`mailto:${contact.email}`}>{contact.email}</a>
+    </p>
+  </article>
+  <PageCtx ctx={payCtx()} />
+</Base>
+
+<script>
+  // One listener for the whole document, so it keeps working across the router's page swaps.
+  // A copy button copies its raw value and says so beside it; if the clipboard is blocked, the value is selected instead.
+  const timers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+  document.addEventListener('click', async (event) => {
+    const button = (event.target as Element | null)?.closest<HTMLButtonElement>('.pay-copy');
+    if (!button) return;
+    const status = button.nextElementSibling;
+    let said = 'Copied';
+    try {
+      await navigator.clipboard.writeText(button.dataset.copyValue ?? '');
+    } catch {
+      const value = button.parentElement?.querySelector('.pay-value');
+      if (value) getSelection()?.selectAllChildren(value);
+      said = value ? 'Selected: copy it with ⌘C or Ctrl+C' : 'Copy blocked';
+    }
+    if (!status) return;
+    status.textContent = said;
+    clearTimeout(timers.get(status));
+    timers.set(status, setTimeout(() => (status.textContent = ''), 1800));
+  });
+</script>
+
+<style>
+  .pay { width: min(720px, 88vw); margin: 0 auto; padding: clamp(110px, 16vh, 168px) 0 140px; }
+  .pay-home { display: inline-block; margin-bottom: 28px; font-size: 15px; font-weight: 500; color: var(--text-3); transition: color .2s ease; }
+  .pay-home:hover { color: var(--text); }
+  .pay-title { font-size: clamp(48px, 8vw, 96px); font-weight: 700; letter-spacing: -.05em; line-height: .95; }
+  .pay-intro { margin-top: 22px; max-width: 34em; font-size: clamp(19px, 1.7vw, 22px); font-weight: 500; letter-spacing: -.012em; color: var(--text-2); }
+  .pay-methods { display: grid; gap: 16px; margin-top: 48px; }
+  .pay-method { padding: 26px 28px 24px; border: 1px solid var(--line); border-radius: 22px; background: var(--card); }
+  .pay-method h2 { font-size: 21px; font-weight: 600; letter-spacing: -.018em; }
+  .pay-note { margin-top: 4px; font-size: 15px; color: var(--text-3); }
+  .pay-fields { margin-top: 18px; border-top: 1px solid var(--line); }
+  .pay-field { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 6px 18px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .pay-field dt { font-size: 13px; font-weight: 500; color: var(--text-3); }
+  .pay-field dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; min-width: 0; }
+  .pay-value { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+  .pay-value.mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; font-size: 16px; }
+  /* The button sits flush right; "Copied" appears just left of it, so nothing moves when it does. */
+  .pay-act { position: relative; margin-left: auto; }
+  .pay-copy { padding: 6px 13px; border-radius: 999px; background: var(--bg-2); font-size: 13px; font-weight: 500; color: var(--text-2); transition: background-color .2s ease, color .2s ease; }
+  .pay-copy:hover { background: var(--accent-fill); color: #fff; }
+  .pay-copied { font-size: 13px; font-weight: 500; color: var(--now-fg); white-space: nowrap; }
+  .pay-act .pay-copied { position: absolute; right: calc(100% + 10px); top: 50%; translate: 0 -50%; }
+  .pay-all { display: flex; align-items: baseline; gap: 8px 12px; margin-top: 16px; }
+  .pay-foot { margin-top: 36px; max-width: 40em; font-size: 15px; line-height: 1.6; color: var(--text-3); }
+  .pay-foot a { color: var(--accent); }
+  @media (max-width: 560px) {
+    .pay-method { padding: 22px 20px 20px; }
+    .pay-field { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

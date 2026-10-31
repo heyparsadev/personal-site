@@ -70,6 +70,11 @@ export function projectCtx(p: ProjectInfo, chapters: SectionRef[], next: Project
   };
 }
 
+/** The payment page (/pay) uses the island's page view: its glyph and title, no chapters. */
+export function payCtx(): PageCtx {
+  return { kind: 'project', key: 'pay', title: 'Payment details', glyph: 'card', tint: ['#34c759', '#248a3d'], sections: [] };
+}
+
 export function notFoundCtx(): PageCtx {
   return { kind: 'notfound', key: 'notfound', title: 'Page not found', glyph: 'alert', tint: NEUTRAL, sections: [] };
 }

@@ -3,6 +3,7 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { GLYPH_NAMES } from './lib/glyphs';
 import { PLAYGROUND_STYLES, stageSchema } from './lib/playground-stage';
+import { paySchema } from './lib/payment';
 
 const glyph = z.enum(GLYPH_NAMES);
 const tint = z.tuple([z.string(), z.string()]);
@@ -77,4 +78,9 @@ const about = defineCollection({
   }),
 });
 
-export const collections = { projects, playground, home, about };
+const pay = defineCollection({
+  loader: glob({ pattern: 'pay.md', base: './content/site' }),
+  schema: paySchema,
+});
+
+export const collections = { projects, playground, home, about, pay };
