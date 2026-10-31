@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { GLYPH_NAMES } from './lib/glyphs';
+import { PLAYGROUND_STYLES, stageSchema } from './lib/playground-stage';
 
 const glyph = z.enum(GLYPH_NAMES);
 const tint = z.tuple([z.string(), z.string()]);
@@ -33,6 +34,8 @@ const playground = defineCollection({
     url: z.string().optional(),
     /** Source repository, when the live project (url) also has public code. */
     repo: z.string().optional(),
+    /** Its drawing in the Monoglyph band (src/lib/playground-stage.ts). Without one, the band draws the title. */
+    stage: stageSchema.optional(),
   }),
 });
 
@@ -46,6 +49,8 @@ const home = defineCollection({
     greeting: z.string(),
     greetingSub: z.string(),
     building: z.string(),
+    /** `stage` is the Monoglyph band; `list` brings back the plain list it replaced. */
+    playgroundStyle: z.enum(PLAYGROUND_STYLES).default('stage'),
     playgroundIntro: z.string(),
     previews: z.array(
       z.object({

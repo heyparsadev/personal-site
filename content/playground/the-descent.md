@@ -4,6 +4,12 @@ order: 4
 year: 2026
 kind: web
 url: https://thedescents.site
+stage:
+  scene: tree
+  stat: { label: Your scrollbar spans, value: "3.8B years", sub: "The scrollbar spans 3.8 billion years, back to the last universal common ancestor." }
+  legend: [{ key: "@", text: you }, { key: "#", text: your line }, { key: "/|\\", text: lines that merge into it, dim: true }]
+  range: now
+  params: { years: 3.8 }
 ---
 
 A single page that turns your scrollbar into 3.8 billion years. You start as one glowing dot. As you scroll, the branches of the tree of life merge into yours, one by one, until everything converges on the last universal common ancestor. Then the camera pulls back and you are one lit tip among millions. No libraries, no build step.
