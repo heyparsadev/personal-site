@@ -1,6 +1,6 @@
 // The draw context behind every Playground stage, after Monoglyph's stage.js. A scene puts glyphs into a
 // per-frame cell buffer (the higher priority keeps a cell); the Stage then paints the buffer on its canvas.
-import { RAMP, hash, inkAlpha, inkLevel, lerp } from './math';
+import { RAMP, clamp, hash, inkAlpha, inkLevel, lerp } from './math';
 
 /** Glyphs are 12px on 15px rows; a column is as wide as "0". */
 export const GLYPH_PX = 12;
@@ -116,6 +116,11 @@ export function createDraw(
     },
   };
   return { g, cells };
+}
+
+/** Text kept inside the grid: on a narrow stage a label slides in from the edge instead of losing letters. */
+export function label(g: Draw, s: string, c: number, r: number, style = STYLE.label, pri = 40): void {
+  g.text(s, clamp(Math.round(c), 0, Math.max(0, g.cols - s.length)), clamp(Math.round(r), 0, g.rows - 1), style, pri);
 }
 
 /** A line of glyphs between two cells; / \ | - follow its angle on screen, where cells are about twice as tall as wide. */

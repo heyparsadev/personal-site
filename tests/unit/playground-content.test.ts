@@ -1,19 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { load } from 'js-yaml';
-import { listFiles } from '../helpers/private-markers';
+import { frontmatter, playgroundEntries } from '../helpers/frontmatter';
 import { PLAYGROUND_STYLES, stageSchema } from '../../src/lib/playground-stage';
 
-/** The YAML between a markdown file's first two `---` lines. */
-function frontmatter(file: string): Record<string, any> {
-  const [, yaml] = readFileSync(file, 'utf8').split(/^---\s*$/m);
-  return load(yaml) as Record<string, any>;
-}
-
-const entries = listFiles('content/playground', ['.md']).map((file) => ({
-  id: file.split('/').pop()!.replace(/\.md$/, ''),
-  fm: frontmatter(file),
-}));
+const entries = playgroundEntries();
 
 describe('playground stage blocks', () => {
   it('every stage block validates', () => {
