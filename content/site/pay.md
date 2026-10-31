@@ -5,6 +5,7 @@ title: Payment details
 intro: Thanks for working with me. Pay whichever way suits you; every detail below copies with one tap.
 methods:
   - name: Bank transfer
+    logo: sepa
     meta: [EUR, SEPA]
     note: In euros (EUR), by SEPA transfer.
     fields:
@@ -12,11 +13,13 @@ methods:
       - { label: IBAN, value: MT98CFTE28004000000000005059076, kind: iban }
       - { label: BIC / SWIFT, value: CFTEMTM1, kind: bic }
   - name: PayPal
+    logo: paypal
     meta: [PayPal]
     note: Send to my PayPal account.
     fields:
       - { label: PayPal email, value: kzn.parsa@gmail.com, kind: email }
   - name: Bitcoin
+    logo: bitcoin
     meta: [BTC, Bitcoin network]
     note: Bitcoin (BTC) on the Bitcoin network only. Any other coin or network sent to this address is lost.
     fields:

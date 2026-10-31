@@ -14,6 +14,14 @@ export function installContact(core: IslandCore): void {
     core.dom.views.get('contact')?.querySelector<HTMLElement>('.row')?.focus({ preventScroll: true });
   });
 
+  // A page that copies something itself can confirm it here too: dispatch `island:copied` on document with
+  // { what: 'IBAN', ok: true } (the payment page does). The island persists across pages, so this listens once.
+  document.addEventListener('island:copied', (event) => {
+    const { what, ok = true } = (event as CustomEvent<{ what: string; ok?: boolean }>).detail ?? {};
+    core.dom.setCopied(ok, what);
+    core.flash('copied', 1500);
+  });
+
   core.on('copy', async (text) => {
     let ok = true;
     try {

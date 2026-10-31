@@ -134,9 +134,9 @@ export class IslandDom {
     this.slot('jump-ico').style.transform = up ? 'rotate(180deg)' : '';
   }
 
-  /** Shows the copy result on the pill and says the same words through the live region. */
-  setCopied(ok: boolean): void {
-    const text = ok ? 'Email copied' : 'Copy blocked';
+  /** Shows the copy result on the pill and says the same words through the live region. `what` names the copied thing. */
+  setCopied(ok: boolean, what = 'Email'): void {
+    const text = ok ? `${what} copied` : 'Copy blocked';
     this.slot('copied').textContent = text;
     this.announce(text);
   }
