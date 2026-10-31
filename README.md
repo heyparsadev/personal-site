@@ -26,13 +26,22 @@ All copy lives in `content/`:
 
 | Path | What |
 |---|---|
-| `content/site/home.md` | hero name and lines (`[Word](key)` makes a live word), island greeting, word previews, playground intro |
+| `content/site/home.md` | hero name and lines (`[Word](key)` makes a live word), island greeting, word previews, playground intro and style |
 | `content/site/about.md` | about text, beliefs, timeline, "What I ship with", links |
 | `content/projects/*.md` | one file per project. `page: true` gets its own page (`/slug`); `page: false` opens as a sheet from its card. `##` headings become chapters in the island; a `>` blockquote is a pull quote |
-| `content/playground/*.md` | weekend projects, in `order` |
+| `content/playground/*.md` | weekend projects, in `order`, each with a `stage` block: its drawing in the Playground band |
 | `content/notes/` | private notes. Git-ignored and never loaded. Where the folder exists, `npm run test:build` fails if any of it reaches the site |
 
 The link preview that shared links show (`public/og.png`, 1200×630) is the home page's first frame, set by hand in `scripts/og/card.html`. It does not read `content/`, so when the hero name, lines or greeting change, update the card too and run `npm run og`.
+
+### The Playground band
+
+The Playground is a black band in the Monoglyph style. Each weekend project sits beside its own stage: a drawing in monospace glyphs, made from something real about the project.
+
+- **Going back.** `playgroundStyle: list` in `content/site/home.md` brings back the plain list (`src/components/Playground.astro`, kept unchanged). `stage` is the band. The git tag `playground-classic` marks the site before the band.
+- **Numbers and words.** Everything a stage shows lives in its project's `stage` block in `content/playground/*.md`: the scene, the stat under the description, the legend, the caption and the scene's data, such as the benchmark's leaderboard. It is checked at build time (`src/lib/playground-stage.ts`), so a wrong value fails the build instead of drawing nonsense. A project with no `stage` block gets its title drawn in glyphs, with its year as the stat.
+- **Fonts.** Geist Mono and Geist Pixel are served from `public/fonts/` under the SIL Open Font License (`public/fonts/OFL.txt`). Only the band uses them.
+- **Motion.** The band's "Pause motion" toggle holds every stage. The choice is remembered per visitor; with none stored, the band follows the system's reduced-motion setting.
 
 ## Deploy
 
