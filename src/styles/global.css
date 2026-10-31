@@ -58,6 +58,10 @@ html.theme-vt::view-transition-old(island) { animation: none; opacity: 0; }
 /* The circle uncovers the new colours, not a half-second fade towards them (the fades are for switches without it). */
 html.theme-vt :not(.isl-wrap, .isl-wrap *) { transition: none !important; }
 
+/* Over the Playground's black band the island's black pill would vanish in the light theme, so while it sits
+   there it takes the dark theme's light edge (scripts/playground/band.ts sets the class). */
+html.island-on-stage { --island-fx: url(#isl-goo) drop-shadow(0 0 1px rgba(255, 255, 255, .4)); }
+
 @media (prefers-reduced-motion: reduce) {
   .js [data-after-title] { transform: none; filter: none; }
   .landed [data-after-title] { animation-duration: .01s; }

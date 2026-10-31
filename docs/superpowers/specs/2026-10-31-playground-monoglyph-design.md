@@ -74,7 +74,7 @@ Each item below is copied from the prototype's layout 2.
   - **Off screen:** a stage that isn't on screen doesn't draw.
   - **Reduced motion:** each scene draws one still frame, with no opening, no shimmer and no decode.
 - **Pausing.** The loops run for as long as a stage is on screen, so the band needs a way to stop them (WCAG 2.2.2, Level A).
-  - The control: one toggle at the right end of the band's HUD row, in the HUD's own style. It reads "pause motion" or "play motion", and is a real `<button>` with `aria-pressed`.
+  - The control: one toggle at the right end of the band's HUD row, in the HUD's own style. It is a real `<button>` named "Pause motion", shown uppercase like the rest of the HUD. Its name never changes. `aria-pressed="true"` means paused, and the pressed state shows in full `stage-ink` with an underline. This follows the correct `aria-pressed` pattern, which an earlier "pause motion"/"play motion" wording didn't.
   - What stops: every stage holds its current frame. The opening, shimmer, loops, readouts that follow the pointer, and live values (the Sisyphus countdown, the Mars clock) all stop.
   - Memory: the choice is remembered per visitor in `localStorage`, every access wrapped in `try`/`catch`.
   - With reduced motion, the band starts paused with still frames. Pressing "play motion" is an explicit choice and is honoured.

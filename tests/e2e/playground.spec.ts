@@ -85,3 +85,79 @@ test('a resized stage redraws at its new size', async ({ page }) => {
   await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.width === Math.round(c.clientWidth * Math.min(2, devicePixelRatio)))).toBe(true);
   await expect.poll(() => canvas.evaluate(drawn)).toBe(true);
 });
+
+const pause = (page: import('@playwright/test').Page) => page.locator('#playground button.pg-pause');
+const pixels = (page: import('@playwright/test').Page) =>
+  page.locator('#playground .pg-stage canvas').first().evaluate((c: HTMLCanvasElement) => c.toDataURL());
+
+test('the pause toggle stops the stages and starts them again', async ({ page }) => {
+  await page.goto('/');
+  const first = page.locator('#playground .pg-stage').first();
+  await first.scrollIntoViewIfNeeded();
+  await expect.poll(() => first.locator('canvas').evaluate(drawn)).toBe(true);
+  await expect(pause(page)).toHaveAccessibleName('Pause motion');
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'false');
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'true');
+  await first.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const held = await pixels(page);
+  await page.waitForTimeout(1200);
+  expect(await pixels(page)).toBe(held);
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'false');
+  await first.scrollIntoViewIfNeeded();
+  await expect.poll(() => pixels(page), { timeout: 3000 }).not.toBe(held);
+});
+
+test('the pause is remembered', async ({ page }) => {
+  await page.goto('/');
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'true');
+  await page.reload();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('reduced motion starts the band paused', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('the toggle still works when storage throws', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript(() => {
+    Storage.prototype.getItem = () => { throw new Error('storage blocked'); };
+    Storage.prototype.setItem = () => { throw new Error('storage blocked'); };
+  });
+  await page.goto('/');
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'true');
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'false');
+  expect(errors).toEqual([]);
+});
+
+test('the island takes its light edge only over the band', async ({ page }) => {
+  await page.goto('/');
+  const html = page.locator('html');
+  await expect(html).not.toHaveClass(/island-on-stage/);
+  await page.evaluate(() => scrollTo(0, document.getElementById('playground')!.offsetTop + 200));
+  await expect(html).toHaveClass(/island-on-stage/);
+  await page.evaluate(() => scrollTo(0, document.getElementById('about')!.offsetTop + 100));
+  await expect(html).not.toHaveClass(/island-on-stage/);
+});
+
+test('leaving home and coming back remounts the stages', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => scrollTo(0, document.getElementById('playground')!.offsetTop + 200));
+  await expect(page.locator('html')).toHaveClass(/island-on-stage/);
+  await page.locator('#work a.card-link[href="/barayand"]').click();
+  await expect(page).toHaveURL(/\/barayand$/);
+  await expect(page.locator('html')).not.toHaveClass(/island-on-stage/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('#playground .pg-stage canvas')).toHaveCount(8);
+  await expectEveryStageDraws(page);
+});

@@ -26,7 +26,10 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
   <div class="wrap">
     <div class="pg-hud">
       <span class="pg-hud-group" aria-hidden="true"><span>{items.length} projects</span><span>weekends</span></span>
-      <span class="pg-hud-group pg-hud-end"><span aria-hidden="true">all finished</span></span>
+      <span class="pg-hud-group pg-hud-end">
+        <span aria-hidden="true">all finished</span>
+        <button type="button" class="pg-pause" aria-pressed="false">Pause motion</button>
+      </span>
     </div>
     <h2 class="pg-title" id="playground-title">Playground</h2>
     <p class="pg-sub">{intro}</p>
@@ -120,6 +123,11 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
 
   .pg-hud { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; margin-bottom: 30px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
   .pg-hud-group { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+  /* The one control on the band: it stops every stage (WCAG 2.2.2). Its name stays put; aria-pressed carries the state. */
+  .pg-pause { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--stage-hud); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: color .15s ease, text-decoration-color .15s ease; }
+  .pg-pause:hover, .pg-pause[aria-pressed="true"] { color: var(--stage-ink); }
+  .pg-pause[aria-pressed="true"] { text-decoration-color: currentColor; }
+  :global(html:not(.js)) .pg-pause { display: none; }
   .pg-title { font: 400 clamp(64px, 11vw, 148px)/.9 var(--font-pixel); letter-spacing: 0; text-transform: lowercase; color: var(--stage-ink); }
   .pg-sub { margin: 24px 0 64px; max-width: 34em; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: var(--stage-muted); }
 
