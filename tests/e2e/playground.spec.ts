@@ -161,3 +161,41 @@ test('leaving home and coming back remounts the stages', async ({ page }) => {
   await expect(page.locator('#playground .pg-stage canvas')).toHaveCount(8);
   await expectEveryStageDraws(page);
 });
+
+const seconds = (text: string) => { const [m, s] = text.split(':').map(Number); return m * 60 + s; };
+const sisyphus = (page: import('@playwright/test').Page) => page.locator('#playground .pitem').nth(5);
+/** The countdown's settled value: decode keeps its target in data-text while the digits flicker. */
+async function secondsLeft(page: import('@playwright/test').Page) {
+  const stat = sisyphus(page).locator('[data-stat-value]');
+  await expect.poll(() => stat.getAttribute('data-text')).not.toBeNull();
+  return seconds((await stat.getAttribute('data-text'))!);
+}
+
+test('a stage below the fold stays dark until it prints in', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+  const last = page.locator('#playground .pg-stage canvas').last();
+  expect(await last.evaluate(drawn)).toBe(false);
+});
+
+test('a push starts when its stage is first seen', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForTimeout(3500);
+  await sisyphus(page).locator('.pg-stage').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(900);
+  const left = await secondsLeft(page);
+  expect(left).toBeGreaterThanOrEqual(57);
+});
+
+test('pressing play on a band that started paused starts each push from the top', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await sisyphus(page).locator('.pg-stage').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3000);
+  await pause(page).click();
+  await expect(pause(page)).toHaveAttribute('aria-pressed', 'false');
+  await sisyphus(page).locator('.pg-stage').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(900);
+  const left = await secondsLeft(page);
+  expect(left).toBeGreaterThanOrEqual(57);
+});

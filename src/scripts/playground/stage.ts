@@ -76,7 +76,11 @@ export class Stage {
       this.visible = entry.isIntersecting;
       if (this.visible && !this.entered) {
         this.entered = true;
-        if (!this.paused) this.print();
+        // A stage's time starts when it is first seen: a push starts at 1:00, not wherever page load left it.
+        if (!this.paused) {
+          this.t0 = performance.now();
+          this.print();
+        }
       }
       if (this.visible) this.wake();
     }, { threshold: 0.2 });
@@ -95,7 +99,9 @@ export class Stage {
       this.endPrint();
       this.pointer = null;
     } else {
+      // Resuming continues from the held frame; a stage that has never played starts from the beginning.
       if (this.frozen) this.t0 = now - this.frozen.t * 1000;
+      else if (!this.played) this.t0 = now;
       this.frozen = null;
     }
     this.paused = paused;
@@ -190,7 +196,8 @@ export class Stage {
   private draw(now: number): void {
     const { ctx, grid } = this;
     ctx.clearRect(0, 0, grid.w, grid.h);
-    if (!grid.cols) return;
+    // A playing stage stays dark until it prints in, so its finished drawing never flashes first.
+    if (!grid.cols || (!this.entered && !this.paused)) return;
     // Playing: live time. Paused after playing: the held frame. Never played: the scene's still frame.
     const still = this.paused && !this.frozen;
     if (!this.paused) this.played = true;

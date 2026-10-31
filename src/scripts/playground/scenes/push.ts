@@ -13,14 +13,29 @@ export interface PushParams {
 interface State {
   phase: 'push' | 'roll' | 'rest';
   left: number;
+  /** How far along the slope the push gets: as high as the boulder and Sisyphus still fit on the stage. */
+  top: number;
 }
 
 const SUN = norm3(-0.55, -0.6, 0.58);
+const START = 0.1;
+
+/** The slope's surface row at a column: it climbs off the top right, a mountain with no summit. */
+const slopeOf = (cols: number, rows: number) => (c: number) =>
+  rows - 1 - (c / (cols - 1)) * (rows - 1) * 1.3 + 0.5 * Math.sin(c * 0.31) + 0.35 * Math.sin(c * 0.13 + 1.3);
+const radiusOf = (cols: number, cw: number) => Math.min(LINE * 2.3, cols * cw * 0.065);
 
 export function push({ push, roll, rest }: PushParams): Scene<State> {
   const cycle = push + roll + rest;
   return {
-    init: () => ({ phase: 'push', left: push }),
+    init({ cols, rows, cw }) {
+      const slope = slopeOf(cols, rows), R = radiusOf(cols, cw);
+      // The boulder's top sits 1.95 radii above the surface, and Sisyphus's head three rows above his feet.
+      const need = Math.max((1.95 * R) / LINE, 3.2);
+      let top = 0.68;
+      while (top > START + 0.05 && slope(top * (cols - 1)) < need) top -= 0.005;
+      return { phase: 'push', left: push, top };
+    },
     status(s): Status {
       if (s.phase === 'push') return { label: 'Time left on this push', value: clock(s.left) };
       if (s.phase === 'roll') return { label: 'Time is up', value: '0:00' };
@@ -29,23 +44,23 @@ export function push({ push, roll, rest }: PushParams): Scene<State> {
     draw(g, s) {
       const t = g.still ? push * 0.43 : g.t % cycle;
       const base = g.rows - 1;
-      const slope = (c: number) => base - (c / (g.cols - 1)) * base * 1.3 + 0.5 * Math.sin(c * 0.31) + 0.35 * Math.sin(c * 0.13 + 1.3);
+      const slope = slopeOf(g.cols, g.rows);
       let p: number;
       if (t < push) {
         s.phase = 'push';
-        p = 0.1 + 0.58 * (t / push);
+        p = START + (s.top - START) * (t / push);
         s.left = push - t;
       } else if (t < push + roll) {
         s.phase = 'roll';
         const u = (t - push) / roll;
-        p = 0.68 - 0.58 * u * u;
+        p = s.top - (s.top - START) * u * u;
         s.left = 0;
       } else {
         s.phase = 'rest';
-        p = 0.1;
+        p = START;
         s.left = cycle - t;
       }
-      const R = Math.min(LINE * 2.3, g.cols * g.cw * 0.065);
+      const R = radiusOf(g.cols, g.cw);
       const bc = p * (g.cols - 1);
       const cx = (bc + 0.5) * g.cw, cy = slope(bc) * LINE - R * 0.95;
       // The mountain, with a one-cell gap around the boulder so it reads as its own thing.
@@ -82,7 +97,7 @@ export function push({ push, roll, rest }: PushParams): Scene<State> {
         g.bright('\\', fc, fr - 1);
       } else if (s.phase === 'rest') {
         const u = 1 - s.left / rest;
-        const fc = Math.round(lerp(0.68 * (g.cols - 1) - 3, edge - 3, u)), fr = Math.floor(slope(fc));
+        const fc = Math.round(lerp(s.top * (g.cols - 1) - 3, edge - 3, u)), fr = Math.floor(slope(fc));
         const stride = Math.floor(g.t * 2.5) % 2;
         g.bright('o', fc, fr - 3);
         g.bright('|', fc, fr - 2);

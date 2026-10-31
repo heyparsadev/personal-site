@@ -84,6 +84,64 @@ describe('playground scenes', () => {
     expect(html).not.toContain('iranspoti');
   });
 
+  // The grids the band really gets: 375px phones give 40 columns and 8 to 12 rows (plugins' wrapped HUD
+  // leaves 8), desktop gives 70 × 14.
+  const REAL: Grid[] = [{ cols: 40, rows: 8, cw: 7.2 }, { cols: 40, rows: 10, cw: 7.2 }, { cols: 70, rows: 14, cw: 7.2 }];
+
+  it('labels never write over each other on the real grids', () => {
+    for (const { id } of entries) {
+      for (const grid of REAL) {
+        const scene = sceneOf(id);
+        const state = scene.init(grid);
+        const { g } = createDraw(grid, { t: 3, now: 3000, still: false, hover: null });
+        const owner = new Map<number, string>();
+        const clashes: string[] = [];
+        const text = g.text;
+        g.text = (s, c, r, style, pri) => {
+          for (let i = 0; i < s.length; i++) {
+            const cc = Math.round(c) + i, rr = Math.round(r);
+            if (cc < 0 || cc >= grid.cols || rr < 0 || rr >= grid.rows) continue;
+            const key = rr * grid.cols + cc;
+            // Another label on this cell, or right beside it on the same row, runs the two together.
+            for (const k of [key - 1, key, key + 1]) {
+              const prev = owner.get(k);
+              if (k !== key && Math.floor(k / grid.cols) !== rr) continue;
+              if (prev !== undefined && prev !== s) clashes.push(`"${prev}" and "${s}" at ${cc},${rr}`);
+            }
+            owner.set(key, s);
+          }
+          text(s, c, r, style, pri);
+        };
+        scene.draw(g, state);
+        expect(clashes, `${id} on ${grid.cols}×${grid.rows}`).toEqual([]);
+      }
+    }
+  });
+
+  it('the plugins draw all nine screens on a phone', () => {
+    const scene = sceneOf('claude-code-plugins');
+    const grid = REAL[0];
+    const { cells } = frame(scene, grid, 3, { still: true });
+    // A screen is a frame of box-drawing glyphs, or one block per screen in the compact layout.
+    const corners = [...cells.values()].filter((c) => c.ch === '╭').length;
+    const tiles = [...cells.values()].filter((c) => c.ch === '█' && c.r < grid.rows - 3).length;
+    expect(Math.max(corners, tiles)).toBe(9);
+    // The validator's wall stays above the two caption rows.
+    expect([...cells.values()].filter((c) => c.ch === '/' && c.r >= grid.rows - 2)).toEqual([]);
+  });
+
+  it('the boulder stays whole on the stage for the whole push', () => {
+    const scene = sceneOf('sisyphus');
+    for (const grid of [WIDE, ...REAL]) {
+      const state = scene.init(grid);
+      // The boulder is drawn at priority 20; count its cells as the push starts and as it ends.
+      const boulder = (t: number) => [...frame(scene, grid, t, { state }).cells.values()].filter((c) => c.pri === 20).length;
+      const start = boulder(1);
+      expect(start, `${grid.cols}×${grid.rows}`).toBeGreaterThan(4);
+      expect(boulder(59.9), `${grid.cols}×${grid.rows}`).toBeGreaterThanOrEqual(Math.floor(start * 0.8));
+    }
+  });
+
   it('label() keeps text inside the grid', () => {
     const { g, cells } = createDraw(NARROW, { t: 0, now: 0, still: true, hover: null });
     label(g, 'helpfinity', 36, 30);
