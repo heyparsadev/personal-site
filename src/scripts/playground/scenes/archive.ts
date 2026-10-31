@@ -30,7 +30,7 @@ export function archive({ kinds }: ArchiveParams): Scene<State> {
       const axis = g.rows - 2;
       const first = g.still ? 0 : Math.floor(g.t / DAY);
       // The archive scrolls a day every 1.4s and wraps, so it never runs out however long the page stays open.
-      const day = (c: number) => s.days[(first + c) % s.days.length];
+      const day = (c: number) => s.days[(((first + c) % s.days.length) + s.days.length) % s.days.length];
       const fresh = g.still ? 1 : (g.t % DAY) / DAY;
       const cycle = Math.floor(g.t / CYCLE);
       const phase = g.still ? 0.3 : (g.t % CYCLE) / CYCLE;

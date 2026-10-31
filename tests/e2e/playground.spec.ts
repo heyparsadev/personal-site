@@ -39,3 +39,49 @@ test('focus rings are white on the band', async ({ page }) => {
   await page.keyboard.press('Tab');
   await expect(link).toHaveCSS('outline-color', 'rgb(255, 255, 255)');
 });
+
+/** True once a canvas has painted anything: any pixel with alpha. */
+const drawn = (canvas: HTMLCanvasElement) => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx || !canvas.width || !canvas.height) return false;
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 0) return true;
+  return false;
+};
+
+/** Scrolls each stage into view and waits until its canvas has drawn. */
+async function expectEveryStageDraws(page: import('@playwright/test').Page, timeout = 5000) {
+  const stages = page.locator('#playground .pg-stage');
+  await expect(stages).toHaveCount(8);
+  for (let i = 0; i < 8; i++) {
+    const stage = stages.nth(i);
+    await stage.scrollIntoViewIfNeeded();
+    await expect.poll(() => stage.locator('canvas').evaluate(drawn), { timeout, message: `stage ${i + 1}` }).toBe(true);
+  }
+}
+
+test('every stage draws once it scrolls into view', async ({ page }) => {
+  await page.goto('/');
+  await expectEveryStageDraws(page);
+});
+
+test('stages draw a still frame under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expectEveryStageDraws(page);
+});
+
+test('stages still draw when the fonts never arrive', async ({ page }) => {
+  await page.route('**/fonts/*.woff2', (route) => route.abort());
+  await page.goto('/');
+  await expectEveryStageDraws(page, 8000);
+});
+
+test('a resized stage redraws at its new size', async ({ page }) => {
+  await page.goto('/');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const canvas = page.locator('#playground .pg-stage canvas').first();
+  await canvas.scrollIntoViewIfNeeded();
+  await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.width === Math.round(c.clientWidth * Math.min(2, devicePixelRatio)))).toBe(true);
+  await expect.poll(() => canvas.evaluate(drawn)).toBe(true);
+});

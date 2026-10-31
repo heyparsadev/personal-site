@@ -35,6 +35,14 @@ describe('playground scenes', () => {
     }
   });
 
+  it('a frame stamped a moment before the scene started still draws', () => {
+    // requestAnimationFrame's timestamp can precede the performance.now() taken when a stage is built.
+    for (const { id } of entries) {
+      const { cells } = frame(sceneOf(id), WIDE, -0.004);
+      expect(cells.size, id).toBeGreaterThan(0);
+    }
+  });
+
   it('the registry falls back to drawing the title', () => {
     const { cells } = frame(sceneFor({ scene: 'nope', params: {}, title: 'Test', year: 2026 }), WIDE, 3);
     expect(cells.size).toBeGreaterThan(0);
