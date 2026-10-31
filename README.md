@@ -28,7 +28,7 @@ All copy lives in `content/`:
 |---|---|
 | `content/site/home.md` | hero name and lines (`[Word](key)` makes a live word), island greeting, word previews, playground intro and style |
 | `content/site/about.md` | about text, beliefs, timeline, "What I ship with", links |
-| `content/site/pay.md` | the payment page for clients (`/pay`): bank transfer, PayPal and bitcoin details. It stays out of search and isn't linked from the site; IBANs, BICs and bitcoin addresses are checked at build time, so a typo fails the build |
+| `content/site/pay.md` | the payment page for clients (`/pay`): bank transfer, PayPal and bitcoin details, each card with its method's logo (Simple Icons, `src/lib/payment-logos.ts`). It stays out of search and isn't linked from the site; IBANs, BICs and bitcoin addresses are checked at build time, so a typo fails the build |
 | `content/projects/*.md` | one file per project. `page: true` gets its own page (`/slug`); `page: false` opens as a sheet from its card. `##` headings become chapters in the island; a `>` blockquote is a pull quote |
 | `content/playground/*.md` | weekend projects, in `order`, each with a `stage` block: its drawing in the Playground band |
 | `content/notes/` | private notes. Git-ignored and never loaded. Where the folder exists, `npm run test:build` fails if any of it reaches the site |

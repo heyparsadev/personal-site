@@ -1,80 +1,81 @@
 ---
 // The page Parsa sends to clients: how to pay him. Its words and numbers live in content/site/pay.md, checked at
 // build time (src/lib/payment.ts). It is noindex, left out of the sitemap, and not linked from anywhere on the site.
-// Each way to pay is a Monoglyph stage: the number that matters, large in pixel type, on black.
+// Each way to pay is a card in the Dynamic Island's own language (a black capsule, the method's logo as an app tile,
+// pill buttons), and copying a detail is confirmed by the island itself.
 import { getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import PageCtx from '../components/PageCtx.astro';
 import { payCtx } from '../lib/page-ctx';
 import { groupIban } from '../lib/payment';
-import '../styles/monoglyph.css';
+import { PAY_LOGOS } from '../lib/payment-logos';
 
 const entry = await getEntry('pay', 'pay');
 if (!entry) throw new Error('content/site/pay.md is missing');
 const { title, intro, methods, reference, contact } = entry.data;
 type Field = (typeof methods)[number]['fields'][number];
 
-/** What a reader sees: an IBAN in groups of four. The copy buttons always copy the raw value. */
 const shown = (f: Field) => (f.kind === 'iban' ? groupIban(f.value) : f.value);
-/** The value a method is about (its IBAN, email or address) goes large; the rest are rows under it. */
 const mainOf = (fields: Field[]) => fields.find((f) => f.kind === 'iban' || f.kind === 'email' || f.kind === 'btc') ?? fields[0];
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 ---
 <Base title={`${title} · Parsa Kharazmian`} description="How to pay Parsa Kharazmian: bank transfer in euros (SEPA), PayPal or bitcoin." noindex>
-  <article class="pay">
-    <a class="pay-home" href="/"><span aria-hidden="true">← </span>Home</a>
-    <h1 class="pay-title" data-island-title>{title}.</h1>
-    <p class="pay-intro" data-after-title style="--i:0">{intro}</p>
-    <div class="pay-methods" data-after-title style="--i:1">
+  <article class="pi">
+    <a class="pi-home" href="/"><span aria-hidden="true">← </span>Home</a>
+    <h1 class="pi-title" data-island-title>{title}.</h1>
+    <p class="pi-intro" data-after-title style="--i:0">{intro}</p>
+    <div class="pi-cards" data-after-title style="--i:1">
       {methods.map((m) => {
         const main = mainOf(m.fields);
         const rest = m.fields.filter((f) => f !== main);
+        const logo = m.logo ? PAY_LOGOS[m.logo] : null;
         return (
-          <section class="pay-method" data-method aria-labelledby={`pay-${slug(m.name)}`}>
-            <div class="pay-hud">
-              <h2 id={`pay-${slug(m.name)}`}>{m.name}</h2>
-              <span class="pay-meta">{m.meta.map((x) => <span>{x}</span>)}</span>
-            </div>
-            <div class="pay-answer" data-field={main.label}>
-              <p class="pay-label">{main.label}</p>
-              <p class="pay-main-row">
-                <span class="pay-main" style={`--chars:${shown(main).length}`}>{shown(main)}</span>
-                <span class="pay-act">
-                  <button type="button" class="pay-copy" data-copy-value={main.value}>Copy<span class="visually-hidden"> {main.label}</span></button>
-                  <span class="pay-copied" role="status"></span>
+          <section class="pi-card" data-method aria-labelledby={`pi-${slug(m.name)}`}>
+            <div class="pi-head">
+              {logo && (
+                <span class:list={['pi-logo', `is-${m.logo}`]} role="img" aria-label={logo.label} style={`--brand:${logo.hex}`}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    {m.logo === 'bitcoin' && <circle cx="12" cy="12" r="10.4" fill="#fff" />}
+                    <path d={logo.path} fill={m.logo === 'bitcoin' ? logo.hex : '#fff'} />
+                  </svg>
                 </span>
-              </p>
-              <p class="pay-note">{m.note}</p>
+              )}
+              <span class="pi-name">
+                <h2 id={`pi-${slug(m.name)}`}>{m.name}</h2>
+                {m.meta.some((x) => x !== m.name) && <small>{m.meta.join(' · ')}</small>}
+              </span>
+            </div>
+            <div class="pi-main" data-field={main.label}>
+              <span class="pi-label">{main.label}</span>
+              <span class="pi-main-row">
+                <span class="pi-value">{shown(main)}</span>
+                <button type="button" class="pi-pill" data-copy-value={main.value} data-copy-what={main.label}>Copy<span class="visually-hidden"> {main.label}</span></button>
+              </span>
             </div>
             {rest.length > 0 && (
-              <dl class="pay-rows">
+              <dl class="pi-rows">
                 {rest.map((f) => (
-                  <div class="pay-row" data-field={f.label}>
+                  <div class="pi-row" data-field={f.label}>
                     <dt>{f.label}</dt>
-                    <dd class="pay-value">{shown(f)}</dd>
-                    <dd class="pay-act">
-                      <button type="button" class="pay-copy" data-copy-value={f.value}>Copy<span class="visually-hidden"> {f.label}</span></button>
-                      <span class="pay-copied" role="status"></span>
-                    </dd>
+                    <dd class="pi-value">{shown(f)}</dd>
+                    <dd><button type="button" class="pi-pill" data-copy-value={f.value} data-copy-what={f.label}>Copy<span class="visually-hidden"> {f.label}</span></button></dd>
                   </div>
                 ))}
               </dl>
             )}
-            {m.fields.length > 1 && (
-              <p class="pay-all">
-                <span class="pay-act">
-                  <button type="button" class="pay-copy" data-copy-value={m.fields.map((f) => `${f.label}: ${f.value}`).join('\n')}>
-                    Copy all<span class="visually-hidden"> {m.name.toLowerCase()} details</span>
-                  </button>
-                  <span class="pay-copied" role="status"></span>
-                </span>
-              </p>
-            )}
+            <div class="pi-foot">
+              <p class="pi-note">{m.note}</p>
+              {m.fields.length > 1 && (
+                <button type="button" class="pi-pill is-strong" data-copy-value={m.fields.map((f) => `${f.label}: ${f.value}`).join('\n')} data-copy-what={`${m.name.split(' ')[0]} details`}>
+                  Copy all<span class="visually-hidden"> {m.name.toLowerCase()} details</span>
+                </button>
+              )}
+            </div>
           </section>
         );
       })}
     </div>
-    <p class="pay-foot" data-after-title style="--i:2">
+    <p class="pi-foot-note" data-after-title style="--i:2">
       {reference} {contact.text} <a href={`mailto:${contact.email}`}>{contact.email}</a>
     </p>
   </article>
@@ -82,77 +83,80 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 </Base>
 
 <script>
-  // One listener for the whole document, so it keeps working across the router's page swaps.
-  // A copy button copies its raw value and says so beside it; if the clipboard is blocked, the value is selected instead.
-  const timers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+  // One listener for the whole document, so it keeps working across the router's page swaps. A copy is confirmed by
+  // the island (src/scripts/island/features/contact.ts listens for island:copied); if the clipboard is blocked, the
+  // value is selected instead and the island says so.
   document.addEventListener('click', async (event) => {
-    const button = (event.target as Element | null)?.closest<HTMLButtonElement>('.pay-copy');
+    const button = (event.target as Element | null)?.closest<HTMLButtonElement>('.pi-pill');
     if (!button) return;
-    const status = button.nextElementSibling;
-    let said = 'Copied';
+    let ok = true;
     try {
       await navigator.clipboard.writeText(button.dataset.copyValue ?? '');
     } catch {
-      const value = button.closest('[data-field]')?.querySelector('.pay-main, .pay-value');
+      ok = false;
+      const value = button.closest('[data-field]')?.querySelector('.pi-value');
       if (value) getSelection()?.selectAllChildren(value);
-      said = value ? 'Selected: copy it with ⌘C or Ctrl+C' : 'Copy blocked';
     }
-    if (!status) return;
-    status.textContent = said;
-    clearTimeout(timers.get(status));
-    timers.set(status, setTimeout(() => (status.textContent = ''), 1800));
+    document.dispatchEvent(new CustomEvent('island:copied', { detail: { what: button.dataset.copyWhat ?? 'Detail', ok } }));
   });
 </script>
 
 <style>
-  .pay { width: min(760px, 88vw); margin: 0 auto; padding: clamp(110px, 16vh, 168px) 0 140px; }
-  .pay-home { display: inline-block; margin-bottom: 28px; font-size: 15px; font-weight: 500; color: var(--text-3); transition: color .2s ease; }
-  .pay-home:hover { color: var(--text); }
-  .pay-title { font-size: clamp(48px, 8vw, 96px); font-weight: 700; letter-spacing: -.05em; line-height: .95; }
-  .pay-intro { margin-top: 22px; max-width: 34em; font-size: clamp(19px, 1.7vw, 22px); font-weight: 500; letter-spacing: -.012em; color: var(--text-2); }
-  .pay-methods { display: grid; gap: 16px; margin-top: 48px; }
+  .pi { width: min(720px, 88vw); margin: 0 auto; padding: clamp(110px, 16vh, 168px) 0 140px; }
+  .pi-home { display: inline-block; margin-bottom: 28px; font-size: 15px; font-weight: 500; color: var(--text-3); transition: color .2s ease; }
+  .pi-home:hover { color: var(--text); }
+  .pi-title { font-size: clamp(48px, 8vw, 96px); font-weight: 700; letter-spacing: -.05em; line-height: .95; }
+  .pi-intro { margin-top: 22px; max-width: 34em; font-size: clamp(19px, 1.7vw, 22px); font-weight: 500; letter-spacing: -.012em; color: var(--text-2); }
+  .pi-cards { display: grid; gap: 18px; margin-top: 48px; }
 
-  /* A Monoglyph stage: black in both themes, square, text only in the stage's tokens. In dark the page is as
-     black as the stage, so a hairline keeps them apart. */
-  .pay-method { container-type: inline-size; padding-bottom: 22px; background: #000; color: var(--stage-text); border: 1px solid rgba(255, 255, 255, .12); }
-  .pay-hud { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 22px 24px 0; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
-  .pay-hud h2 { font: 400 19px/1 var(--font-pixel); letter-spacing: 0; text-transform: lowercase; color: var(--stage-ink); }
-  .pay-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 18px; }
+  /* A card in the island's language: a black capsule, the island's greys, its pill buttons, its shadow. */
+  .pi-card { padding: 20px 22px 18px; border-radius: 34px; background: #000; color: #f5f5f7; box-shadow: 0 14px 34px rgba(0, 0, 0, .16); }
+  :global(:root[data-theme="dark"]) .pi-card { box-shadow: 0 0 0 1px rgba(255, 255, 255, .16); }
+  .pi-head { display: flex; align-items: center; gap: 14px; }
+  .pi-logo { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; background: var(--brand); }
+  .pi-logo svg { width: 26px; height: 26px; }
+  /* Bitcoin's mark is its own circle, so it stands without a tile. */
+  .pi-logo.is-bitcoin { background: none; }
+  .pi-logo.is-bitcoin svg { width: 46px; height: 46px; }
+  .pi-name { display: grid; gap: 2px; min-width: 0; }
+  .pi-name h2 { font-size: 17px; font-weight: 600; letter-spacing: -.012em; }
+  .pi-name small { font-size: 12.5px; font-weight: 500; color: #98989d; }
 
-  .pay-answer { padding: 40px 24px 0; }
-  .pay-label { font-size: 15px; line-height: 1.3; color: var(--stage-muted); }
-  .pay-main-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin-top: 10px; }
-  /* Monoglyph's answer: pixel type sized to fit the stage, with tabular figures; its zero is slashed, so 0 and O never mix. */
-  .pay-main { min-width: 0; font-family: var(--font-pixel); font-size: clamp(22px, calc((100cqw - 48px) / var(--chars, 20) * 1.45), 40px); line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--stage-ink); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
-  .pay-note { margin-top: 14px; max-width: 60ch; font: 400 13px/1.45 var(--font-mono); color: var(--stage-muted); }
+  .pi-main { display: grid; gap: 6px; margin-top: 18px; padding: 14px 16px; border-radius: 20px; background: rgba(255, 255, 255, .07); }
+  .pi-label { font-size: 12px; font-weight: 500; color: #98989d; }
+  .pi-main-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .pi-main-row .pi-value { flex: 1 1 auto; font-size: clamp(16px, 2.4vw, 21px); }
+  .pi-main-row .pi-pill { margin-left: auto; }
+  .pi-value { min-width: 0; font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; font-size: 15px; letter-spacing: .01em; color: #f5f5f7; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 
-  .pay-rows { margin: 26px 24px 0; border-top: 1px solid var(--stage-edge); }
-  .pay-row { display: grid; grid-template-columns: 132px minmax(0, 1fr) auto; align-items: baseline; gap: 6px 18px; padding: 12px 0; border-bottom: 1px solid var(--stage-edge); }
-  .pay-row dt { font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
-  .pay-value { min-width: 0; font: 400 15px/1.4 var(--font-mono); color: var(--stage-text); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
-  .pay-all { display: flex; justify-content: flex-end; margin: 16px 24px 0; }
+  .pi-rows { margin-top: 6px; }
+  .pi-row { display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: center; gap: 4px 14px; padding: 10px 16px; border-radius: 14px; transition: background-color .15s ease; }
+  .pi-row:hover { background: rgba(255, 255, 255, .06); }
+  .pi-row dt { font-size: 13px; font-weight: 500; color: #98989d; }
 
-  /* Copy: a small HUD button; "Copied" appears just left of it, so nothing moves when it does. */
-  .pay-act { position: relative; margin-left: auto; }
-  .pay-copy { padding: 7px 11px; border: 1px solid var(--stage-edge); border-radius: 8px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-ink); transition: background-color .15s ease, border-color .15s ease; }
-  .pay-copy:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .3); }
-  .pay-copy:active { transform: scale(.97); }
-  .pay-method :focus-visible { outline-color: #fff; }
-  .pay-copied { position: absolute; right: calc(100% + 10px); top: 50%; translate: 0 -50%; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-ink); white-space: nowrap; }
+  .pi-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 12px; padding: 0 4px 0 16px; }
+  .pi-note { flex: 1 1 260px; font-size: 13px; line-height: 1.45; color: #98989d; }
 
-  .pay-foot { margin-top: 36px; max-width: 40em; font-size: 15px; line-height: 1.6; color: var(--text-3); }
-  .pay-foot a { color: var(--accent); }
+  /* The island's pill: quiet until hovered, and a press that gives a little. */
+  .pi-pill { flex: none; padding: 7px 14px; border-radius: 999px; background: rgba(255, 255, 255, .12); font-size: 13.5px; font-weight: 500; color: rgba(255, 255, 255, .92); transition: background-color .15s ease, transform .12s ease; }
+  .pi-pill:hover { background: rgba(255, 255, 255, .2); }
+  .pi-pill:active { transform: scale(.96); }
+  .pi-pill.is-strong { background: #f5f5f7; color: #000; }
+  .pi-pill.is-strong:hover { background: #fff; }
+  .pi-card :focus-visible { outline-color: #fff; }
+
+  .pi-foot-note { margin-top: 36px; max-width: 40em; font-size: 15px; line-height: 1.6; color: var(--text-3); }
+  .pi-foot-note a { color: var(--accent); }
 
   @media (max-width: 560px) {
-    .pay-hud { padding: 18px 20px 0; }
-    .pay-answer { padding: 32px 20px 0; }
-    .pay-rows { margin: 22px 20px 0; }
-    .pay-row { grid-template-columns: minmax(0, 1fr) auto; }
-    .pay-row dt { grid-column: 1 / -1; }
-    .pay-all { margin: 14px 20px 0; }
+    .pi-card { padding: 18px 16px 16px; border-radius: 28px; }
+    .pi-row { grid-template-columns: minmax(0, 1fr) auto; padding: 10px 12px; }
+    .pi-row dt { grid-column: 1 / -1; }
+    .pi-main { padding: 12px 14px; }
+    .pi-foot { padding-left: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .pay-copy { transition: none; }
-    .pay-copy:active { transform: none; }
+    .pi-pill, .pi-row { transition: none; }
+    .pi-pill:active { transform: none; }
   }
 </style>
