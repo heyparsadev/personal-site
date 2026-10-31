@@ -26,6 +26,6 @@ I started building it in June 2026 and shipped it the same summer as a Persian-f
 
 ## The benchmark
 
-Alongside the product, I published an open, reproducible benchmark for Persian: 300 questions across 10 axes, deterministic scoring with bootstrap confidence intervals, and reference results from the leading models. The Persian-speaking world needed a shared yardstick, so I built one.
+Alongside the product, I published an open, reproducible benchmark for Persian: 544 questions across 21 tracks, deterministic scoring with bootstrap confidence intervals, and reference results from the leading models. The Persian-speaking world needed a shared yardstick, so I built one.
 
 I designed and built Barayand alone, from the brand mark to the billing.

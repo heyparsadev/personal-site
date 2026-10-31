@@ -33,4 +33,4 @@ stage:
       - ["claude-haiku-4-5", 0.8434, 0.8219, 0.8326]
 ---
 
-A benchmark for how well language models actually handle Persian: 300 items across 10 tracks, from reading and culture to hard math and strict instruction following, with deterministic scoring and bootstrap confidence intervals. I built it because I wanted a Persian yardstick to exist, and nothing did. The result I did not expect: on strict instruction following, the biggest and most expensive model lost to a smaller one.
+A benchmark for how well language models actually handle Persian: 544 items across 21 tracks, from reading and culture to hard math and strict instruction following, with deterministic scoring and bootstrap confidence intervals. I built it because I wanted a Persian yardstick to exist, and nothing did. The result I did not expect: on strict instruction following, the biggest and most expensive model lost to a smaller one.
