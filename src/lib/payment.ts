@@ -51,7 +51,8 @@ const field = z
 export const paySchema = z.object({
   title: z.string(),
   intro: z.string(),
-  methods: z.array(z.object({ name: z.string(), note: z.string(), fields: z.array(field).min(1) })).min(1),
+  /** `meta` is the stage's HUD: the currency and the network, in Monoglyph's uppercase. */
+  methods: z.array(z.object({ name: z.string(), meta: z.array(z.string()).default([]), note: z.string(), fields: z.array(field).min(1) })).min(1),
   reference: z.string(),
   contact: z.object({ text: z.string(), email: z.string() }),
 });
