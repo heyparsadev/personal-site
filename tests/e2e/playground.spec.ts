@@ -251,11 +251,13 @@ test.describe('cards and their sheets', () => {
     await stage.scrollIntoViewIfNeeded();
     await expect.poll(() => stage.locator('canvas').evaluate(drawn)).toBe(true);
     const box = (await stage.boundingBox())!;
-    // Wait out the print-in: the readout only shows once the drawing has settled.
-    await page.waitForTimeout(1200);
-    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);
-    await page.mouse.move(box.x + box.width * 0.22, box.y + box.height / 2);
-    await expect(stage.locator('.mg-readout')).toBeVisible();
+    // The readout only shows once the drawing has printed in, so keep nudging the pointer until it does.
+    let x = 0.2;
+    await expect.poll(async () => {
+      x = x === 0.2 ? 0.22 : 0.2;
+      await page.mouse.move(box.x + box.width * x, box.y + box.height / 2);
+      return stage.locator('.mg-readout').isVisible();
+    }).toBe(true);
     await expect(stage.locator('.mg-readout')).toContainText('rank');
   });
 
@@ -275,6 +277,26 @@ test.describe('cards and their sheets', () => {
     await page.goto('/#apsis');
     await expect(page.locator('#sheet-apsis')).toBeVisible();
     await expect(page.locator('#sheet-apsis')).toContainText('Time, kept at a distance.');
+  });
+
+  test("a #sisyphus link opens a sheet whose countdown runs, though the card is far down the page", async ({ page }) => {
+    await page.goto('/#sisyphus');
+    await expect(page.locator('#sheet-sisyphus')).toBeVisible();
+    const stat = page.locator('#sheet-sisyphus [data-stat-value]');
+    await expect.poll(async () => { const t = await stat.getAttribute('data-text'); return t ? seconds(t) : 60; }, { timeout: 6000 }).toBeLessThan(60);
+  });
+
+  test("a sheet's links keep their square corners under the keyboard's focus ring", async ({ page }) => {
+    await page.goto('/');
+    const open = page.locator('[data-sheet-open="delta"]');
+    await open.scrollIntoViewIfNeeded();
+    await open.locator('.pg-plus').click();
+    await expect(page.locator('#sheet-delta')).toHaveClass(/is-settled/);
+    const link = page.locator('#sheet-delta a[href="https://delta.heyparsa.com"]');
+    for (let i = 0; i < 4 && !(await link.evaluate((a) => a === document.activeElement)); i++) await page.keyboard.press('Tab');
+    await expect(link).toBeFocused();
+    await expect(link).toHaveCSS('outline-style', 'solid');
+    await expect(link).toHaveCSS('border-top-left-radius', '0px');
   });
 
   test('a sheet grows out of its square card and stays square, while a Work sheet keeps its round corners', async ({ page }) => {
@@ -308,6 +330,28 @@ test.describe('cards and their sheets', () => {
     const height = await page.locator('#playground').evaluate((el) => el.getBoundingClientRect().height);
     expect(height).toBeLessThan(2.6 * 900);
   });
+
+  test('every drawing has room for its six rows between its HUDs, from a small phone to a desktop', async ({ page }) => {
+    for (const [width, height] of [[320, 640], [390, 844], [700, 900], [768, 1024], [834, 1112], [1024, 768], [1440, 900]]) {
+      await page.setViewportSize({ width, height });
+      await page.goto('/');
+      // Stage.measure's rows: the plot starts on the first 15 px line below the top HUD and ends above the bottom
+      // one, and a stage always draws at least six, so fewer than six here means the drawing prints over its legend.
+      const rows = await page.locator('#playground .pg-card .pg-stage').evaluateAll((stages) => stages.map((s) => {
+        const top = (s.querySelector('.mg-hud-top') as HTMLElement).offsetHeight;
+        const bottom = (s.querySelector('.mg-hud-bottom') as HTMLElement).offsetHeight;
+        return Math.floor((s.clientHeight - bottom - 2) / 15) - 1 - Math.ceil((top + 4) / 15) + 1;
+      }));
+      for (const [i, n] of rows.entries()) expect(n, `${width}px, card ${i + 1}`).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  test("at 320 px nothing in a card's HUD runs past its stage", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto('/');
+    const over = await page.locator('#playground .pg-card .mg-hud').evaluateAll((huds) => huds.filter((h) => h.scrollWidth > h.clientWidth).map((h) => h.textContent?.trim()));
+    expect(over).toEqual([]);
+  });
 });
 
 test.describe('on a phone', () => {
@@ -335,5 +379,40 @@ test.describe('on a phone', () => {
     await page.goto('/');
     const height = await page.locator('#playground').evaluate((el) => el.getBoundingClientRect().height);
     expect(height).toBeLessThan(1.4 * 844);
+  });
+
+  test('a swipe that starts on a drawing moves the row', async ({ page }) => {
+    await page.goto('/');
+    const row = page.locator('#playground .pg-cards');
+    const canvas = row.locator('.pg-card canvas').first();
+    await canvas.scrollIntoViewIfNeeded();
+    const box = (await canvas.boundingBox())!;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.synthesizeScrollGesture', { x: box.x + box.width * 0.7, y: box.y + box.height / 2, xDistance: -160, yDistance: 0, gestureSourceType: 'touch', speed: 800 });
+    await expect.poll(() => row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  });
+
+  test('two fingers on a drawing can still zoom the page', async ({ page }) => {
+    await page.goto('/');
+    const canvas = page.locator('#playground .pg-card canvas').first();
+    await canvas.scrollIntoViewIfNeeded();
+    const box = (await canvas.boundingBox())!;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.synthesizePinchGesture', { x: box.x + box.width / 2, y: box.y + box.height / 2, scaleFactor: 2, gestureSourceType: 'touch' });
+    await expect.poll(() => page.evaluate(() => visualViewport!.scale)).toBeGreaterThan(1.2);
+  });
+
+  test("a card's focus ring has room inside the swipe row", async ({ page }) => {
+    await page.goto('/');
+    const open = page.locator('#playground [data-sheet-open]').first();
+    await open.focus();
+    // Keyboard focus, not a programmatic one: Tab away and back so :focus-visible applies.
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(open).toBeFocused();
+    const [card, row] = await page.evaluate(() => [document.querySelector('#playground .pg-card')!, document.querySelector('#playground .pg-cards')!].map((e) => e.getBoundingClientRect()));
+    // The ring is 2 px wide, 3 px out from the card; the row clips whatever crosses its edges.
+    expect(card.top - 5).toBeGreaterThanOrEqual(row.top);
+    expect(card.bottom + 5).toBeLessThanOrEqual(row.bottom);
   });
 });

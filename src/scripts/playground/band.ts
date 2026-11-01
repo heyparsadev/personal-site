@@ -49,6 +49,7 @@ function unmount(): void {
 
 async function mount(): Promise<void> {
   unmount();
+  // data-style="stage" marks the band in both its layouts (data-layout cards or rows), not playgroundStyle: stage.
   const band = document.querySelector<HTMLElement>('#playground[data-style="stage"]');
   if (!band) return;
   const mine = generation;

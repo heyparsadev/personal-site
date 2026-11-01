@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { frontmatter, playgroundEntries } from '../helpers/frontmatter';
 import { PLAYGROUND_STYLES, stageSchema } from '../../src/lib/playground-stage';
 import { cardLine } from '../../src/lib/playground-card';
+import { HOME_SECTIONS } from '../../src/lib/page-ctx';
+import { listFiles } from '../helpers/private-markers';
 
 const entries = playgroundEntries();
 
@@ -48,6 +50,15 @@ describe('playground stage blocks', () => {
   });
 });
 
+describe('home page ids', () => {
+  it('a Playground project shares its id with no Work project and no section: they share #links and sheet ids', () => {
+    const projects = listFiles('content/projects', ['.md']).map((f) => f.split('/').pop()!.replace(/\.md$/, ''));
+    const taken = new Set([...projects, ...HOME_SECTIONS.map((s) => s.id)]);
+    expect(projects.length).toBeGreaterThan(0);
+    expect(entries.map(({ id }) => id).filter((id) => taken.has(id))).toEqual([]);
+  });
+});
+
 describe('playground card lines', () => {
   const words = (s: string) => s.split(/\s+/).length;
 
@@ -55,6 +66,13 @@ describe('playground card lines', () => {
     for (const { id, fm, body } of entries) {
       const line = cardLine(fm.summary, body);
       expect(words(line), `${id}: "${line}"`).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('a card line uses no Markdown a card cannot show: only *emphasis*', () => {
+    for (const { id, fm, body } of entries) {
+      const line = cardLine(fm.summary, body);
+      expect(line, id).not.toMatch(/\*\*|_|`|\[|\]|"|--/);
     }
   });
 

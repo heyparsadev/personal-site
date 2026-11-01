@@ -43,7 +43,8 @@ const titleId = `sheet-${entry.id}-title`;
   .pg-sheet { width: min(640px, 100%); border-radius: 0; background: #000; color: var(--stage-text); box-shadow: 0 0 0 1px var(--stage-edge), 0 30px 80px rgba(0, 0, 0, .35); }
   /* The site's accent ring is too dark on black. */
   .pg-sheet :focus-visible { outline-color: #fff; }
-  .pg-sheet .sheet-close { color: var(--stage-ink); background: rgba(255, 255, 255, .12); }
+  /* Opaque, so the text a long sheet scrolls under it doesn't show through. */
+  .pg-sheet .sheet-close { color: var(--stage-ink); background: #1f1f1f; }
   .pg-sheet .sheet-meta { font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
   .pg-sheet .sheet-title { margin-top: 14px; font: 400 clamp(44px, 7vw, 64px)/.9 var(--font-pixel); letter-spacing: 0; text-transform: lowercase; color: var(--stage-ink); }
   .pg-sheet-body { margin-top: 28px; font-size: 18px; line-height: 1.6; color: var(--stage-muted); }
@@ -53,7 +54,8 @@ const titleId = `sheet-${entry.id}-title`;
   .pg-stat-label { font-size: 13px; line-height: 1.3; color: var(--stage-muted); }
   .pg-stat-value { font: 400 56px/.95 var(--font-pixel); color: var(--stage-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .pg-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
-  .pg-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--stage-edge); font: 500 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-ink); transition: border-color .15s ease; }
+  /* Square like the cards, also under global.css's focus ring, which would round them. */
+  .pg-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--stage-edge); border-radius: 0; font: 500 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-ink); transition: border-color .15s ease; }
   .pg-links a:hover { border-color: var(--stage-ink); }
   /* Without JavaScript the sheets are sections after main (sheet.css), and this one stays black. */
   :global(html:not(.js)) .pg-sheet { background: #000; }

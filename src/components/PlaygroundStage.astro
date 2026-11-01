@@ -14,7 +14,8 @@ interface Props {
 }
 const { intro, layout } = Astro.props;
 const items = (await getCollection('playground')).sort((a, b) => a.data.order - b.data.order);
-const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (await render(it)).Content })));
+// Only rows show the whole description; cards leave it to the sheets.
+const rendered = layout === 'rows' ? await Promise.all(items.map(async (it) => ({ it, Content: (await render(it)).Content }))) : [];
 const pad = (i: number) => String(i + 1).padStart(2, '0');
 ---
 <section class="sec pg-band" id="playground" data-style="stage" data-layout={layout} aria-labelledby="playground-title">
@@ -166,8 +167,12 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
   .pg-cards { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: var(--wrap); margin: 0 auto; }
   .pg-card { position: relative; isolation: isolate; display: flex; flex-direction: column; border: 1px solid rgba(255, 255, 255, .12); cursor: pointer; transition: border-color .2s ease; }
   .pg-card:hover { border-color: rgba(255, 255, 255, .32); }
-  /* The drawing sits above the card's button so its readout still follows the pointer; band.ts passes its clicks on. */
-  .pg-card .pg-stage { z-index: 2; height: clamp(250px, 21vw, 290px); border: 0; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+  :global(html:not(.js)) .pg-card { cursor: auto; }
+  /* The drawing sits above the card's button so its readout still follows the pointer; band.ts passes its clicks on.
+     290px holds six rows of drawing between the HUDs even when a narrow card stacks them. */
+  .pg-card .pg-stage { z-index: 2; height: 290px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+  /* A long name pushes the kind and year onto a line of their own. */
+  .pg-card .mg-hud-top { flex-wrap: wrap; row-gap: 6px; }
   .pg-card .mg-wordmark { text-transform: lowercase; }
   .pg-line { padding: 18px 72px 22px 24px; font-size: 16px; line-height: 1.5; color: var(--stage-muted); }
   .pg-line :global(em) { color: var(--stage-text); }
@@ -177,12 +182,16 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
   .pg-plus { position: absolute; right: 20px; bottom: 18px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--stage-ink); background: rgba(255, 255, 255, .12); transition: transform .35s var(--ease-out), background-color .2s ease; }
   .pg-plus svg { width: 16px; height: 16px; }
   .pg-card:hover .pg-plus { transform: scale(1.08); background: rgba(255, 255, 255, .2); }
-  .pg-open:active .pg-plus { transform: scale(.94); }
+  .pg-card:active .pg-plus { transform: scale(.94); }
   .pg-count { display: none; }
   /* A narrow card stacks its legend over its range, whatever the screen. */
   @container (max-width: 440px) {
     .pg-card .mg-hud { padding: 18px 20px; }
     .pg-card .mg-hud-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+  /* On the smallest phones the longest names ("claude code plugins") still fit on one line. */
+  @container (max-width: 270px) {
+    .pg-card .mg-wordmark { font-size: 16px; }
   }
 
   /* On a phone the cards are one swipe row: each snaps to the content's edge and the next one peeks in. */
@@ -195,6 +204,9 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
       gap: 12px;
       padding-inline: calc((100% - var(--wrap)) / 2);
       scroll-padding-inline: calc((100% - var(--wrap)) / 2);
+      /* The row clips at its edges, so it keeps room above and below for a card's focus ring. */
+      padding-block: 6px;
+      margin-block: -6px;
       overflow-x: auto;
       overscroll-behavior-x: contain;
       scroll-snap-type: x mandatory;
@@ -202,9 +214,8 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
     }
     .pg-cards::-webkit-scrollbar { display: none; }
     .pg-card { scroll-snap-align: start; }
-    .pg-card .pg-stage { height: 290px; }
-    /* A swipe that starts on a drawing still moves the row. */
-    .pg-card .pg-stage canvas { touch-action: pan-x pan-y; }
+    /* A swipe that starts on a drawing still moves the row, and two fingers still zoom the page. */
+    .pg-card .pg-stage canvas { touch-action: manipulation; }
     .pg-count { display: block; margin-top: 16px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; color: var(--stage-hud); font-variant-numeric: tabular-nums; }
   }
   :global(html:not(.js)) .pg-count { display: none; }

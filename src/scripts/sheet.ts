@@ -144,5 +144,9 @@ document.addEventListener('astro:before-swap', () => {
 });
 document.addEventListener('astro:page-load', () => {
   const id = location.hash.slice(1);
-  if (id && document.getElementById(`sheet-${id}`)) void openSheet(id, document.querySelector<HTMLElement>(`[data-sheet-open="${id}"]`));
+  if (!id || !document.getElementById(`sheet-${id}`)) return;
+  // A link to a sheet first brings its card on screen: the sheet grows out of it, a Playground card's stage keeps
+  // the sheet's number live, and closing hands focus back to a button the visitor can see.
+  document.querySelector(`[data-card="${id}"]`)?.scrollIntoView({ block: 'center' });
+  void openSheet(id, document.querySelector<HTMLElement>(`[data-sheet-open="${id}"]`));
 });
