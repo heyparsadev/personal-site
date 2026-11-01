@@ -37,7 +37,7 @@ export interface ProjectInfo {
   years: string;
 }
 
-const NEUTRAL: Tint = ['#8e8e93', '#48484a'];
+export const NEUTRAL: Tint = ['#8e8e93', '#48484a'];
 
 export const HOME_LINK: PageLink = { href: '/', title: 'Home', glyph: 'home', tint: NEUTRAL };
 

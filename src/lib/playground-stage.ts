@@ -4,8 +4,9 @@ import { z } from 'astro/zod';
 export const SCENE_IDS = ['archive', 'agent-run', 'planet', 'tree', 'river', 'push', 'leaderboard', 'plugins', 'name'] as const;
 export type SceneId = (typeof SCENE_IDS)[number];
 
-/** `stage` renders the Monoglyph band; `list` brings back the plain list (src/components/Playground.astro). */
-export const PLAYGROUND_STYLES = ['stage', 'list'] as const;
+/** `cards` renders the Monoglyph band as cards that open sheets; `stage` is the same band with a full row per
+ *  project; `list` brings back the plain list (src/components/Playground.astro). */
+export const PLAYGROUND_STYLES = ['cards', 'stage', 'list'] as const;
 
 const shared = {
   /** The big number beside the description. `sub` is what a screen reader hears instead of the animated value. */
@@ -53,3 +54,14 @@ export const stageSchema = z.discriminatedUnion('scene', [
 ]);
 
 export type StageConfig = z.infer<typeof stageSchema>;
+
+/** An entry's stage; a project without a stage block of its own draws its title, with its year as the stat. */
+export function stageOf(data: { stage?: StageConfig; year: number }): StageConfig {
+  return data.stage ?? {
+    scene: 'name',
+    params: {},
+    stat: { label: 'Year', value: String(data.year) },
+    legend: [{ key: '@%', text: 'its name' }],
+    range: '',
+  };
+}

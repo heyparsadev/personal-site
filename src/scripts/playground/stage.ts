@@ -12,6 +12,13 @@ export interface StageParts {
   statValue: HTMLElement | null;
 }
 
+/** Where a readout's left edge goes: 12px right of its column at x, or to its left near the stage's right edge, and
+ *  never past either edge, which a card's narrow stage on a phone would otherwise push it over. */
+export function readoutLeft(x: number, cw: number, width: number, stageWidth: number): number {
+  const left = x + cw + 12 + width > stageWidth - 8 ? x - 12 - width : x + cw + 12;
+  return Math.max(8, Math.min(left, stageWidth - 8 - width));
+}
+
 /** Monoglyph's decode: the digits that changed flicker, then settle left to right in 42ms steps. */
 const decodeTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 export function decodeTo(el: HTMLElement, text: string, { duration = 480, animate = true } = {}): void {
@@ -234,7 +241,7 @@ export class Stage {
     }
   }
 
-  /** The readout sits 12px right of its column, flips left near the edge, and stays above the drawing. */
+  /** The readout sits beside its column inside the stage (readoutLeft), and stays above the drawing. */
   private place(note: Readout | null): void {
     const el = this.readout;
     if (!el) return;
@@ -251,8 +258,7 @@ export class Stage {
     }
     el.hidden = false;
     const { cw, ox, w, top } = this.grid;
-    const x = ox + note.c * cw;
-    const left = x + cw + 12 + el.offsetWidth > w - 8 ? x - 12 - el.offsetWidth : x + cw + 12;
+    const left = readoutLeft(ox + note.c * cw, cw, el.offsetWidth, w);
     const y = Math.max(top * LINE, (top + note.r) * LINE - el.offsetHeight - 6);
     el.style.transform = `translate(${Math.round(left)}px, ${Math.round(y)}px)`;
   }

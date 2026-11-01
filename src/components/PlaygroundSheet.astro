@@ -1,0 +1,60 @@
+---
+// A Playground project's sheet (playgroundStyle: cards): its whole description, its number and its links, on the
+// band's black. Its card opens it through src/scripts/sheet.ts, like the Work sheets; while it is open, the card's
+// stage keeps its number live (src/scripts/playground/band.ts).
+import { render, type CollectionEntry } from 'astro:content';
+import { stageOf } from '../lib/playground-stage';
+import { NEUTRAL } from '../lib/page-ctx';
+import '../styles/monoglyph.css';
+
+interface Props {
+  entry: CollectionEntry<'playground'>;
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const { stat } = stageOf(d);
+const titleId = `sheet-${entry.id}-title`;
+---
+<section class="sheet pg-sheet" id={`sheet-${entry.id}`} data-sheet={entry.id} data-title={d.title} data-glyph="pixel" data-tint={NEUTRAL.join(',')} aria-labelledby={titleId} tabindex="-1">
+  <div class="sheet-inner">
+    <button class="sheet-close" type="button" data-sheet-close aria-label={`Close ${d.title}`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+    <p class="sheet-meta">{[d.year, d.kind].filter(Boolean).join(' · ')}</p>
+    <h2 class="sheet-title" id={titleId}>{d.title}</h2>
+    <div class="pg-sheet-body"><Content /></div>
+    <p class="pg-stat">
+      <span class="pg-stat-label" data-stat-label aria-hidden="true">{stat.label}</span>
+      <span class="pg-stat-value" data-stat-value aria-hidden="true">{stat.value}</span>
+      <span class="visually-hidden">{stat.sub ?? `${stat.label}: ${stat.value}.`}</span>
+    </p>
+    {(d.url || d.repo) && (
+      <p class="pg-links">
+        {d.url && <a href={d.url} target="_blank" rel="noopener">Open {d.title}<span aria-hidden="true"> ↗</span></a>}
+        {d.repo && <a href={d.repo} target="_blank" rel="noopener">Source<span class="visually-hidden"> code for {d.title} on GitHub</span><span aria-hidden="true"> ↗</span></a>}
+      </p>
+    )}
+  </div>
+</section>
+
+<style>
+  /* Black in both themes and square like the cards; the hairline keeps its edge on the dark theme's black. */
+  .pg-sheet { width: min(640px, 100%); border-radius: 0; background: #000; color: var(--stage-text); box-shadow: 0 0 0 1px var(--stage-edge), 0 30px 80px rgba(0, 0, 0, .35); }
+  /* The site's accent ring is too dark on black. */
+  .pg-sheet :focus-visible { outline-color: #fff; }
+  .pg-sheet .sheet-close { color: var(--stage-ink); background: rgba(255, 255, 255, .12); }
+  .pg-sheet .sheet-meta { font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-hud); }
+  .pg-sheet .sheet-title { margin-top: 14px; font: 400 clamp(44px, 7vw, 64px)/.9 var(--font-pixel); letter-spacing: 0; text-transform: lowercase; color: var(--stage-ink); }
+  .pg-sheet-body { margin-top: 28px; font-size: 18px; line-height: 1.6; color: var(--stage-muted); }
+  .pg-sheet-body :global(em) { color: var(--stage-text); }
+  .pg-sheet-body :global(p + p) { margin-top: 1em; }
+  .pg-stat { display: grid; gap: 10px; margin-top: 32px; }
+  .pg-stat-label { font-size: 13px; line-height: 1.3; color: var(--stage-muted); }
+  .pg-stat-value { font: 400 56px/.95 var(--font-pixel); color: var(--stage-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pg-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+  .pg-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--stage-edge); font: 500 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--stage-ink); transition: border-color .15s ease; }
+  .pg-links a:hover { border-color: var(--stage-ink); }
+  /* Without JavaScript the sheets are sections after main (sheet.css), and this one stays black. */
+  :global(html:not(.js)) .pg-sheet { background: #000; }
+</style>

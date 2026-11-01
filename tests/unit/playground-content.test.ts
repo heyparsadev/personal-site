@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { frontmatter, playgroundEntries } from '../helpers/frontmatter';
 import { PLAYGROUND_STYLES, stageSchema } from '../../src/lib/playground-stage';
+import { cardLine } from '../../src/lib/playground-card';
 
 const entries = playgroundEntries();
 
@@ -40,9 +41,26 @@ describe('playground stage blocks', () => {
     expect(stageSchema.safeParse({ ...valid, scene: 'riverr' }).success).toBe(false);
   });
 
-  it('home picks the stage style', () => {
+  it('home picks the cards style', () => {
     const home = frontmatter('content/site/home.md');
-    expect(home.playgroundStyle).toBe('stage');
+    expect(home.playgroundStyle).toBe('cards');
     expect(PLAYGROUND_STYLES).toContain(home.playgroundStyle);
+  });
+});
+
+describe('playground card lines', () => {
+  const words = (s: string) => s.split(/\s+/).length;
+
+  it('every card line fits a card: twenty words at most', () => {
+    for (const { id, fm, body } of entries) {
+      const line = cardLine(fm.summary, body);
+      expect(words(line), `${id}: "${line}"`).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('a summary is the start of its own description, never new copy', () => {
+    for (const { id, fm, body } of entries.filter(({ fm }) => fm.summary)) {
+      expect(body.startsWith(fm.summary.replace(/[.!?]$/, '')), id).toBe(true);
+    }
   });
 });

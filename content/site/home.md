@@ -7,7 +7,7 @@ interactive: { label: Try the interactive version, href: "https://os26.heyparsa.
 greeting: "Hi, I’m Parsa."
 greetingSub: Welcome to heyparsa.com
 building: Barayand
-playgroundStyle: stage  # list = the previous plain list
+playgroundStyle: cards  # stage = a full row per project, list = the plain list before the band
 playgroundIntro: Things I build on weekends, for the fun of it. None of these are companies. All of them are finished.
 previews:
   - key: sibkade

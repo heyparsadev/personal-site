@@ -9,6 +9,7 @@ import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
 import PageCtx from '../components/PageCtx.astro';
 import ProjectSheet from '../components/ProjectSheet.astro';
+import PlaygroundSheet from '../components/PlaygroundSheet.astro';
 import { homeCtx } from '../lib/page-ctx';
 import '../styles/sheet.css';
 
@@ -17,13 +18,16 @@ if (!home) throw new Error('content/site/home.md is missing');
 const projects = await getCollection('projects');
 const links = Object.fromEntries(projects.filter((p) => p.data.page).map((p) => [p.id, `/${p.id}`]));
 const sheets = projects.filter((p) => !p.data.page).sort((a, b) => a.data.order - b.data.order);
+const style = home.data.playgroundStyle;
+// As cards, every Playground project opens in a sheet of its own.
+const playgroundSheets = style === 'cards' ? (await getCollection('playground')).sort((a, b) => a.data.order - b.data.order) : [];
 ---
 <Base title="Parsa Kharazmian" description="Parsa Kharazmian, founder & CEO of Sibkade, now building Barayand. Startup × Tech × Psychology.">
   <Hero name={home.data.name} lines={home.data.lines} links={links} interactive={home.data.interactive} />
   <WorkSection />
-  {home.data.playgroundStyle === 'list'
+  {style === 'list'
     ? <Playground intro={home.data.playgroundIntro} />
-    : <PlaygroundStage intro={home.data.playgroundIntro} />}
+    : <PlaygroundStage intro={home.data.playgroundIntro} layout={style === 'cards' ? 'cards' : 'rows'} />}
   <About />
   <Contact />
   <PageCtx ctx={homeCtx()} />
@@ -31,6 +35,7 @@ const sheets = projects.filter((p) => !p.data.page).sort((a, b) => a.data.order 
     <div class="sheet-layer" data-sheet-layer>
       <div class="sheet-backdrop" data-sheet-backdrop></div>
       {sheets.map((entry) => <ProjectSheet entry={entry} />)}
+      {playgroundSheets.map((entry) => <PlaygroundSheet entry={entry} />)}
     </div>
   </Fragment>
 </Base>

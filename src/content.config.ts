@@ -35,6 +35,8 @@ const playground = defineCollection({
     url: z.string().optional(),
     /** Source repository, when the live project (url) also has public code. */
     repo: z.string().optional(),
+    /** The card's line when the description's first sentence is too long for it (src/lib/playground-card.ts). */
+    summary: z.string().optional(),
     /** Its drawing in the Monoglyph band (src/lib/playground-stage.ts). Without one, the band draws the title. */
     stage: stageSchema.optional(),
   }),
@@ -50,8 +52,8 @@ const home = defineCollection({
     greeting: z.string(),
     greetingSub: z.string(),
     building: z.string(),
-    /** `stage` is the Monoglyph band; `list` brings back the plain list it replaced. */
-    playgroundStyle: z.enum(PLAYGROUND_STYLES).default('stage'),
+    /** `cards` is the Monoglyph band as cards; `stage` its first form, a row per project; `list` the plain list. */
+    playgroundStyle: z.enum(PLAYGROUND_STYLES).default('cards'),
     playgroundIntro: z.string(),
     previews: z.array(
       z.object({

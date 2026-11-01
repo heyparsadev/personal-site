@@ -1,29 +1,23 @@
 ---
 // The Playground as a black Monoglyph band: every project gets its own stage, drawn in glyphs from its content's
-// stage block (src/lib/playground-stage.ts). playgroundStyle: list in home.md brings back Playground.astro.
+// stage block (src/lib/playground-stage.ts). As cards (playgroundStyle: cards) a project shows its stage and one
+// line, and opens the rest in its sheet (PlaygroundSheet.astro); as rows (playgroundStyle: stage) it gets a full
+// row. playgroundStyle: list in home.md brings back Playground.astro.
 import { getCollection, render } from 'astro:content';
-import type { StageConfig } from '../lib/playground-stage';
+import { stageOf } from '../lib/playground-stage';
+import { cardLine, lineHtml } from '../lib/playground-card';
 import '../styles/monoglyph.css';
 
 interface Props {
   intro: string;
+  layout: 'cards' | 'rows';
 }
-const { intro } = Astro.props;
+const { intro, layout } = Astro.props;
 const items = (await getCollection('playground')).sort((a, b) => a.data.order - b.data.order);
 const rendered = await Promise.all(items.map(async (it) => ({ it, Content: (await render(it)).Content })));
-
-/** A project without a stage block of its own draws its title, with its year as the stat. */
-const stageOf = (data: (typeof items)[number]['data']): StageConfig =>
-  data.stage ?? {
-    scene: 'name',
-    params: {},
-    stat: { label: 'Year', value: String(data.year) },
-    legend: [{ key: '@%', text: 'its name' }],
-    range: '',
-  };
 const pad = (i: number) => String(i + 1).padStart(2, '0');
 ---
-<section class="sec pg-band" id="playground" data-style="stage" aria-labelledby="playground-title">
+<section class="sec pg-band" id="playground" data-style="stage" data-layout={layout} aria-labelledby="playground-title">
   <div class="wrap">
     <div class="pg-hud">
       <span class="pg-hud-group" aria-hidden="true"><span>{items.length} projects</span><span>weekends</span></span>
@@ -34,7 +28,7 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
     </div>
     <h2 class="pg-title" id="playground-title">Playground</h2>
     <p class="pg-sub">{intro}</p>
-    <ul class="pg-list">
+    {layout === 'rows' && <ul class="pg-list">
       {rendered.map(({ it, Content }, i) => {
         const stage = stageOf(it.data);
         const payload = { scene: stage.scene, params: stage.params ?? {}, title: it.data.title, year: it.data.year };
@@ -73,8 +67,37 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
           </li>
         );
       })}
-    </ul>
+    </ul>}
   </div>
+  {layout === 'cards' && <>
+    <ul class="pg-cards">
+      {items.map((it) => {
+        const stage = stageOf(it.data);
+        const payload = { scene: stage.scene, params: stage.params ?? {}, title: it.data.title, year: it.data.year };
+        return (
+          <li class="pg-card" data-card={it.id}>
+            <div class="pg-stage" data-stage={JSON.stringify(payload)}>
+              <canvas aria-hidden="true"></canvas>
+              <div class="mg-hud mg-hud-top">
+                <h3 class="mg-wordmark">{it.data.title}</h3>
+                <span class="mg-hud-meta">{[it.data.kind, String(it.data.year)].filter(Boolean).map((m) => <span>{m}</span>)}</span>
+              </div>
+              <div class="mg-readout" aria-hidden="true" hidden></div>
+              <div class="mg-hud mg-hud-bottom" aria-hidden="true">
+                <span class="mg-legend">{stage.legend.map((l) => <span><b class:list={{ 'mg-dim': l.dim }}>{l.key}</b>{l.text}</span>)}</span>
+                <span data-range>{stage.range}</span>
+              </div>
+            </div>
+            <p class="pg-line" set:html={lineHtml(cardLine(it.data.summary, it.body ?? ''))} />
+            <button class="pg-open" type="button" data-sheet-open={it.id} aria-haspopup="dialog" aria-controls={`sheet-${it.id}`} aria-label={`More about ${it.data.title}`}>
+              <span class="pg-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg></span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+    <p class="wrap pg-count" aria-hidden="true"><span data-count>01</span> / {String(items.length).padStart(2, '0')}</p>
+  </>}
 </section>
 
 <script>
@@ -138,4 +161,51 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
     .mg-hud { padding: 18px 20px; }
     .mg-hud-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
   }
+
+  /* Cards: a stage over one line, two to a row like the Work cards. The whole card opens the project's sheet. */
+  .pg-cards { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: var(--wrap); margin: 0 auto; }
+  .pg-card { position: relative; isolation: isolate; display: flex; flex-direction: column; border: 1px solid rgba(255, 255, 255, .12); cursor: pointer; transition: border-color .2s ease; }
+  .pg-card:hover { border-color: rgba(255, 255, 255, .32); }
+  /* The drawing sits above the card's button so its readout still follows the pointer; band.ts passes its clicks on. */
+  .pg-card .pg-stage { z-index: 2; height: clamp(250px, 21vw, 290px); border: 0; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+  .pg-card .mg-wordmark { text-transform: lowercase; }
+  .pg-line { padding: 18px 72px 22px 24px; font-size: 16px; line-height: 1.5; color: var(--stage-muted); }
+  .pg-line :global(em) { color: var(--stage-text); }
+  .pg-open { position: absolute; inset: 0; z-index: 1; }
+  .pg-open:focus-visible { outline: none; }
+  .pg-card:has(.pg-open:focus-visible) { outline: 2px solid #fff; outline-offset: 3px; }
+  .pg-plus { position: absolute; right: 20px; bottom: 18px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--stage-ink); background: rgba(255, 255, 255, .12); transition: transform .35s var(--ease-out), background-color .2s ease; }
+  .pg-plus svg { width: 16px; height: 16px; }
+  .pg-card:hover .pg-plus { transform: scale(1.08); background: rgba(255, 255, 255, .2); }
+  .pg-open:active .pg-plus { transform: scale(.94); }
+  .pg-count { display: none; }
+  /* A narrow card stacks its legend over its range, whatever the screen. */
+  @container (max-width: 440px) {
+    .pg-card .mg-hud { padding: 18px 20px; }
+    .pg-card .mg-hud-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+
+  /* On a phone the cards are one swipe row: each snaps to the content's edge and the next one peeks in. */
+  @media (max-width: 699px) {
+    .pg-cards {
+      width: auto;
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: min(calc(var(--wrap) - 36px), 420px);
+      gap: 12px;
+      padding-inline: calc((100% - var(--wrap)) / 2);
+      scroll-padding-inline: calc((100% - var(--wrap)) / 2);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .pg-cards::-webkit-scrollbar { display: none; }
+    .pg-card { scroll-snap-align: start; }
+    .pg-card .pg-stage { height: 290px; }
+    /* A swipe that starts on a drawing still moves the row. */
+    .pg-card .pg-stage canvas { touch-action: pan-x pan-y; }
+    .pg-count { display: block; margin-top: 16px; font: 500 11px/1.2 var(--font-mono); letter-spacing: .06em; color: var(--stage-hud); font-variant-numeric: tabular-nums; }
+  }
+  :global(html:not(.js)) .pg-count { display: none; }
 </style>

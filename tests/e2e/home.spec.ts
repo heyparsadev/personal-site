@@ -43,19 +43,19 @@ test('clicking the arrow on a project card opens the project, like the rest of t
   }
 });
 
-test('playground links: The Descent, and Delta with its source on GitHub', async ({ page }) => {
+test('playground links: The Descent, and Delta with its source on GitHub, in their sheets', async ({ page }) => {
   await page.goto('/');
-  const descent = page.locator('#playground .pitem', { hasText: 'The Descent' });
-  await expect(descent.locator('.pitem-title a')).toHaveAttribute('href', 'https://thedescents.site');
-  const delta = page.locator('#playground .pitem', { hasText: 'Delta' });
-  await expect(delta.locator('.pitem-title a')).toHaveAttribute('href', 'https://delta.heyparsa.com');
-  const src = delta.locator('a.pitem-src');
-  await expect(src).toHaveAttribute('href', 'https://github.com/heyparsadev/delta');
+  await expect(page.locator('#sheet-the-descent a[href="https://thedescents.site"]')).toHaveCount(1);
+  await page.locator('[data-sheet-open="delta"] .pg-plus').click();
+  const delta = page.locator('#sheet-delta');
+  await expect(delta).toHaveClass(/is-settled/);
+  await expect(delta.locator('a[href="https://delta.heyparsa.com"]')).toHaveAccessibleName('Open Delta');
+  const src = delta.locator('a[href="https://github.com/heyparsadev/delta"]');
   await expect(src).toHaveAccessibleName('Source code for Delta on GitHub');
   await expect(src).toHaveAttribute('target', '_blank');
-  // Delta sits right after The Descent.
-  const titles = await page.locator('#playground .pitem-title').allTextContents();
-  expect(titles.findIndex((t) => t.includes('Delta'))).toBe(titles.findIndex((t) => t.includes('The Descent')) + 1);
+  // Delta's card sits right after The Descent's.
+  const titles = await page.locator('#playground .pg-card h3').allTextContents();
+  expect(titles.indexOf('Delta')).toBe(titles.indexOf('The Descent') + 1);
 });
 
 test('work lays out 2 × 2 on desktop and in one column on a phone', async ({ page }) => {
@@ -73,7 +73,7 @@ test('work lays out 2 × 2 on desktop and in one column on a phone', async ({ pa
 
 test('playground, about and contact render', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#playground .pitem')).toHaveCount(8);
+  await expect(page.locator('#playground .pg-card')).toHaveCount(8);
   await expect(page.locator('#about .belief')).toHaveCount(3);
   await expect(page.locator('#about')).toContainText('Reads Camus.');
   await expect(page.locator('#contact a[href="mailto:me@heyparsa.com"]')).toHaveCount(1);

@@ -1,4 +1,4 @@
-export const GLYPH_NAMES = ['resultant', 'gift', 'psi', 'bag', 'trend', 'code', 'home', 'alert', 'card'] as const;
+export const GLYPH_NAMES = ['resultant', 'gift', 'psi', 'bag', 'trend', 'code', 'home', 'alert', 'card', 'pixel'] as const;
 export type GlyphName = (typeof GLYPH_NAMES)[number];
 export type Tint = readonly [string, string];
 
@@ -12,6 +12,8 @@ const PATHS: Record<GlyphName, string> = {
   home: '<path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/>',
   alert: '<circle cx="12" cy="12" r="8"/><path d="M12 8v5"/><path d="M12 16.2v.3"/>',
   card: '<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><path d="M7 14.5h4"/>',
+  /** The Playground's sheets: four cells of a stage, two lit. */
+  pixel: '<path d="M5 5h5.5v5.5H5zM13.5 13.5H19V19h-5.5z" fill="currentColor" stroke="none"/><path d="M13.5 5H19v5.5h-5.5zM5 13.5h5.5V19H5z" fill="currentColor" stroke="none" opacity=".45"/>',
 };
 
 export function glyphSvg(name: GlyphName): string {

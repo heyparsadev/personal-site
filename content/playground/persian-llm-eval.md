@@ -4,6 +4,7 @@ order: 7
 year: 2026
 kind: open source
 url: https://github.com/heyparsadev/persian-llm-eval
+summary: A benchmark for how well language models actually handle Persian.
 stage:
   scene: leaderboard
   stat: { label: Top combined score, value: "0.945", sub: "The top combined score on public_eval and hard is 0.945, across 17 runs." }

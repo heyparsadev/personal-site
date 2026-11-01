@@ -147,10 +147,11 @@ test.describe('without JavaScript', () => {
   test('the home page shows no "+" buttons; the sheets are plain sections after main', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#island')).toBeHidden();
+    // Two Work cards and the eight Playground cards.
     const plus = page.locator('[data-sheet-open]');
-    await expect(plus).toHaveCount(2);
+    await expect(plus).toHaveCount(10);
     for (const b of await plus.all()) await expect(b).toBeHidden();
-    for (const id of ['#sheet-helpfinity', '#sheet-iranspoti']) {
+    for (const id of ['#sheet-helpfinity', '#sheet-iranspoti', '#sheet-bargasht', '#sheet-claude-code-plugins']) {
       await expect(page.locator(id)).toBeVisible();
       expect(await page.locator(id).evaluate((s) => !!(document.querySelector('main')!.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     }

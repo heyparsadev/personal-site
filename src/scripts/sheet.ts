@@ -82,8 +82,10 @@ export async function openSheet(id: string, trigger: HTMLElement | null): Promis
   if (card && !reduced()) {
     const from = card.getBoundingClientRect();
     const to = sheet.getBoundingClientRect();
+    // The corners morph from the card's to the sheet's own: a Work card's 28px into 32px, a Playground card's square.
+    const corners = [getComputedStyle(card).borderRadius, getComputedStyle(sheet).borderRadius];
     card.style.visibility = 'hidden';
-    await play(sheet, [{ transform: transformFor(from, to), borderRadius: '28px' }, { transform: 'none', borderRadius: '32px' }], { duration: OPEN.duration, easing: OPEN.easing });
+    await play(sheet, [{ transform: transformFor(from, to), borderRadius: corners[0] }, { transform: 'none', borderRadius: corners[1] }], { duration: OPEN.duration, easing: OPEN.easing });
   }
   // closeSheet() may have interrupted the animation above (Escape, backdrop, island) -- when it
   // did, `session.closing` is already true and this stale continuation must not resurrect a
@@ -114,7 +116,7 @@ export async function closeSheet(): Promise<void> {
       for (const a of sheet.getAnimations()) a.cancel();
       const to = card.getBoundingClientRect();
       const from = sheet.getBoundingClientRect();
-      await play(sheet, [{ transform: fromTransform, borderRadius: fromRadius }, { transform: transformFor(to, from), borderRadius: '28px' }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' });
+      await play(sheet, [{ transform: fromTransform, borderRadius: fromRadius }, { transform: transformFor(to, from), borderRadius: getComputedStyle(card).borderRadius }], { duration: CLOSE.duration, easing: CLOSE.easing, fill: 'forwards' });
     }
   } finally {
     cleanup();

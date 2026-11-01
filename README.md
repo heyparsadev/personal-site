@@ -37,10 +37,11 @@ The link preview that shared links show (`public/og.png`, 1200×630) is the home
 
 ### The Playground band
 
-The Playground is a black band in the Monoglyph style. Each weekend project sits beside its own stage: a drawing in monospace glyphs, made from something real about the project.
+The Playground is a black band in the Monoglyph style. Each weekend project is a card: its own stage (a drawing in monospace glyphs, made from something real about the project) over one line of its description. The card opens the rest in a sheet: the whole description, its number and its links. Two cards sit to a row on a desktop; on a phone they are one swipe row, with a counter under it.
 
-- **Going back.** `playgroundStyle: list` in `content/site/home.md` brings back the plain list (`src/components/Playground.astro`, kept unchanged). `stage` is the band. The git tag `playground-classic` marks the site before the band.
-- **Numbers and words.** Everything a stage shows lives in its project's `stage` block in `content/playground/*.md`: the scene, the stat under the description, the legend, the caption and the scene's data, such as the benchmark's leaderboard. It is checked at build time (`src/lib/playground-stage.ts`), so a wrong value fails the build instead of drawing nonsense. A project with no `stage` block gets its title drawn in glyphs, with its year as the stat.
+- **Going back.** `playgroundStyle` in `content/site/home.md` picks the form. `cards` is the band as cards. `stage` is the band's first form, a full row per project with the description and number beside the stage. `list` brings back the plain list (`src/components/Playground.astro`, kept unchanged). The git tag `playground-classic` marks the site before the band.
+- **The card's line.** A card shows the first sentence of its project's description. When that sentence is too long for a card, a `summary` in the project's frontmatter replaces it. A summary has to be the start of the description, in the same words, and no line may run over twenty words; both are tested.
+- **Numbers and words.** Everything a stage shows lives in its project's `stage` block in `content/playground/*.md`: the scene, the stat in the project's sheet, the legend, the caption and the scene's data, such as the benchmark's leaderboard. It is checked at build time (`src/lib/playground-stage.ts`), so a wrong value fails the build instead of drawing nonsense. A project with no `stage` block gets its title drawn in glyphs, with its year as the stat.
 - **Fonts.** Geist Mono and Geist Pixel are served from `public/fonts/` under the SIL Open Font License (`public/fonts/OFL.txt`). Only the band uses them.
 - **Motion.** The band's "Pause motion" toggle holds every stage. The choice is remembered per visitor; with none stored, the band follows the system's reduced-motion setting.
 
